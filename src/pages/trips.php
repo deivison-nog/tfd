@@ -27,7 +27,7 @@ $rows = $stmt->fetchAll();
 <section>
     <div class="section-head">
         <h2>Agendamento de viagens</h2>
-        <a class="btn" href="/index.php?page=trip_form">Nova viagem</a>
+        <a class="btn" href="index.php?page=trip_form">Nova viagem</a>
     </div>
 
     <form method="get" class="toolbar grid-toolbar">
@@ -41,7 +41,7 @@ $rows = $stmt->fetchAll();
             <option value="cancelado" <?= $status === 'cancelado' ? 'selected' : '' ?>>Cancelado</option>
         </select>
         <button type="submit">Filtrar</button>
-        <a class="btn secondary" href="/index.php?page=trips">Limpar</a>
+        <a class="btn secondary" href="index.php?page=trips">Limpar</a>
     </form>
 
     <div class="panel">
@@ -59,7 +59,7 @@ $rows = $stmt->fetchAll();
                     <td><?= e((string) $row['transport_type']) ?></td>
                     <td><span class="badge"><?= e($row['execution_status']) ?></span></td>
                     <td class="actions">
-                        <a href="/index.php?page=trip_form&id=<?= (int) $row['id'] ?>">Editar</a>
+                        <a href="index.php?page=trip_form&id=<?= (int) $row['id'] ?>">Editar</a>
                         <form method="post" onsubmit="return confirmDelete()">
                             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                             <input type="hidden" name="action" value="delete">

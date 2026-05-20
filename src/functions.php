@@ -7,8 +7,41 @@ function e(?string $value): string
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 }
 
+function app_base_path(): string
+{
+    $scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '/index.php');
+    $basePath = rtrim(str_replace('\\', '/', dirname($scriptName)), '/');
+
+    return $basePath === '' || $basePath === '.' ? '' : $basePath;
+}
+
+function app_url(string $path = ''): string
+{
+    $basePath = app_base_path();
+    $path = ltrim($path, '/');
+
+    if ($path === '') {
+        return $basePath === '' ? '/' : $basePath . '/';
+    }
+
+    return ($basePath === '' ? '' : $basePath) . '/' . $path;
+}
+
+function asset_url(string $path): string
+{
+    $frontController = realpath($_SERVER['SCRIPT_FILENAME'] ?? '');
+    $rootController = realpath(__DIR__ . '/../index.php');
+    $assetsPrefix = $frontController === $rootController ? 'public/assets/' : 'assets/';
+
+    return app_url($assetsPrefix . ltrim($path, '/'));
+}
+
 function redirect(string $url): never
 {
+    if (!preg_match('#^[a-z][a-z0-9+.-]*://#i', $url)) {
+        $url = app_url($url);
+    }
+
     header('Location: ' . $url);
     exit;
 }

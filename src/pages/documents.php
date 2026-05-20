@@ -105,7 +105,7 @@ $documents = $stmt->fetchAll();
         </select>
         <input type="number" name="entity_id" min="0" value="<?= $entityId > 0 ? $entityId : '' ?>" placeholder="Filtrar por ID">
         <button type="submit">Filtrar</button>
-        <a class="btn secondary" href="/index.php?page=documents">Limpar</a>
+        <a class="btn secondary" href="index.php?page=documents">Limpar</a>
     </form>
 
     <div class="panel">

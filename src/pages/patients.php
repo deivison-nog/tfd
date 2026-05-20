@@ -28,7 +28,7 @@ if ($q !== '') {
 <section>
     <div class="section-head">
         <h2>Pacientes</h2>
-        <a class="btn" href="/index.php?page=patient_form">Novo paciente</a>
+        <a class="btn" href="index.php?page=patient_form">Novo paciente</a>
     </div>
     <form method="get" class="toolbar">
         <input type="hidden" name="page" value="patients">
@@ -48,8 +48,8 @@ if ($q !== '') {
                     <td><?= e($patient['cns']) ?></td>
                     <td><?= e($patient['phone']) ?></td>
                     <td class="actions">
-                        <a href="/index.php?page=patient_view&id=<?= (int) $patient['id'] ?>">Ver</a>
-                        <a href="/index.php?page=patient_form&id=<?= (int) $patient['id'] ?>">Editar</a>
+                        <a href="index.php?page=patient_view&id=<?= (int) $patient['id'] ?>">Ver</a>
+                        <a href="index.php?page=patient_form&id=<?= (int) $patient['id'] ?>">Editar</a>
                         <form method="post" onsubmit="return confirmDelete()">
                             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                             <input type="hidden" name="action" value="delete">

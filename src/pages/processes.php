@@ -43,7 +43,7 @@ $processes = $stmt->fetchAll();
 <section>
     <div class="section-head">
         <h2>Processos TFD</h2>
-        <a class="btn" href="/index.php?page=process_form">Novo processo</a>
+        <a class="btn" href="index.php?page=process_form">Novo processo</a>
     </div>
     <form method="get" class="toolbar grid-toolbar">
         <input type="hidden" name="page" value="processes">
@@ -61,7 +61,7 @@ $processes = $stmt->fetchAll();
             <?php endforeach; ?>
         </select>
         <button type="submit">Filtrar</button>
-        <a class="btn secondary" href="/index.php?page=processes">Limpar</a>
+        <a class="btn secondary" href="index.php?page=processes">Limpar</a>
     </form>
 
     <div class="panel">
@@ -87,8 +87,8 @@ $processes = $stmt->fetchAll();
                     <td><span class="badge"><?= e($process['status']) ?></span></td>
                     <td><?= e($process['priority']) ?></td>
                     <td class="actions">
-                        <a href="/index.php?page=process_view&id=<?= (int) $process['id'] ?>">Ver</a>
-                        <a href="/index.php?page=process_form&id=<?= (int) $process['id'] ?>">Editar</a>
+                        <a href="index.php?page=process_view&id=<?= (int) $process['id'] ?>">Ver</a>
+                        <a href="index.php?page=process_form&id=<?= (int) $process['id'] ?>">Editar</a>
                         <form method="post" onsubmit="return confirmDelete()">
                             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                             <input type="hidden" name="action" value="delete">

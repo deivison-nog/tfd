@@ -77,7 +77,7 @@ if (is_post()) {
         </label>
         <div class="full actions-row">
             <button type="submit">Salvar</button>
-            <a class="btn secondary" href="/index.php?page=patients">Cancelar</a>
+            <a class="btn secondary" href="index.php?page=patients">Cancelar</a>
         </div>
     </form>
 </section>

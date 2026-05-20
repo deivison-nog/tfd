@@ -18,7 +18,7 @@ $rows = $pdo->query($sql)->fetchAll();
 <section>
     <div class="section-head">
         <h2>Acompanhantes</h2>
-        <a class="btn" href="/index.php?page=companion_form">Novo acompanhante</a>
+        <a class="btn" href="index.php?page=companion_form">Novo acompanhante</a>
     </div>
     <div class="panel">
         <table>
@@ -32,9 +32,9 @@ $rows = $pdo->query($sql)->fetchAll();
                     <td><?= e($row['cpf']) ?></td>
                     <td><?= e($row['relationship']) ?></td>
                     <td><?= e($row['phone']) ?></td>
-                    <td><a href="/index.php?page=process_view&id=<?= (int) $row['process_id'] ?>"><?= e($row['process_number']) ?></a></td>
+                    <td><a href="index.php?page=process_view&id=<?= (int) $row['process_id'] ?>"><?= e($row['process_number']) ?></a></td>
                     <td class="actions">
-                        <a href="/index.php?page=companion_form&id=<?= (int) $row['id'] ?>">Editar</a>
+                        <a href="index.php?page=companion_form&id=<?= (int) $row['id'] ?>">Editar</a>
                         <form method="post" onsubmit="return confirmDelete()">
                             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                             <input type="hidden" name="action" value="delete">

@@ -8,7 +8,7 @@ $user = current_user();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= e(APP_NAME) ?></title>
-    <link rel="stylesheet" href="/assets/style.css">
+    <link rel="stylesheet" href="<?= e(asset_url('style.css')) ?>">
 </head>
 <body>
 <div class="app-shell">
@@ -17,14 +17,14 @@ $user = current_user();
             <h1>TFD</h1>
             <p class="subtitle">Gestão Operacional</p>
             <nav>
-                <a href="/index.php?page=dashboard">Dashboard</a>
-                <a href="/index.php?page=patients">Pacientes</a>
-                <a href="/index.php?page=processes">Processos TFD</a>
-                <a href="/index.php?page=companions">Acompanhantes</a>
-                <a href="/index.php?page=documents">Documentos</a>
-                <a href="/index.php?page=trips">Viagens</a>
-                <a href="/index.php?page=flow">Fluxo (SVG)</a>
-                <a href="/index.php?page=logout">Sair</a>
+                <a href="index.php?page=dashboard">Dashboard</a>
+                <a href="index.php?page=patients">Pacientes</a>
+                <a href="index.php?page=processes">Processos TFD</a>
+                <a href="index.php?page=companions">Acompanhantes</a>
+                <a href="index.php?page=documents">Documentos</a>
+                <a href="index.php?page=trips">Viagens</a>
+                <a href="index.php?page=flow">Fluxo (SVG)</a>
+                <a href="index.php?page=logout">Sair</a>
             </nav>
             <small>Logado como <?= e($user['username']) ?></small>
         </aside>

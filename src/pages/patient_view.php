@@ -17,7 +17,7 @@ $processes = $processesStmt->fetchAll();
 <section>
     <div class="section-head">
         <h2>Paciente: <?= e($patient['name']) ?></h2>
-        <a class="btn" href="/index.php?page=patient_form&id=<?= $id ?>">Editar</a>
+        <a class="btn" href="index.php?page=patient_form&id=<?= $id ?>">Editar</a>
     </div>
     <div class="panel details-grid">
         <div><strong>CPF:</strong> <?= e($patient['cpf']) ?></div>
@@ -33,7 +33,7 @@ $processes = $processesStmt->fetchAll();
             <?php if (!$processes): ?>
                 <li>Sem processos vinculados.</li>
             <?php else: foreach ($processes as $process): ?>
-                <li><a href="/index.php?page=process_view&id=<?= (int) $process['id'] ?>"><?= e($process['process_number']) ?></a> - <?= e($process['status']) ?></li>
+                <li><a href="index.php?page=process_view&id=<?= (int) $process['id'] ?>"><?= e($process['process_number']) ?></a> - <?= e($process['status']) ?></li>
             <?php endforeach; endif; ?>
         </ul>
     </div>

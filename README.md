@@ -36,7 +36,8 @@ Aplicação web em **PHP + CSS + JavaScript** para gestão operacional e adminis
 
 ## Estrutura do projeto
 
-- `public/index.php` → front controller e rotas por página
+- `index.php` → front controller na raiz, compatível com XAMPP
+- `public/index.php` → front controller alternativo para `php -S -t public`
 - `public/assets/` → CSS e JS
 - `src/bootstrap.php` → inicialização da aplicação
 - `src/config.php` → constantes e status/prioridades
@@ -63,6 +64,23 @@ Entidades principais:
 
 ## Como executar localmente
 
+### Opção 1: XAMPP 3.3.0
+
+1. Copie a pasta do projeto para o diretório `htdocs` do XAMPP.
+   Exemplo:
+   ```text
+   C:\xampp\htdocs\tfd
+   ```
+2. Inicie o **Apache** no painel do XAMPP.
+3. (Opcional) Recrie o banco:
+   ```bash
+   php scripts/init_db.php
+   ```
+4. Acesse no navegador:
+   - `http://localhost/tfd/`
+
+### Opção 2: servidor embutido do PHP
+
 1. Entre na pasta do projeto:
    ```bash
    cd /home/runner/work/tfd/tfd
@@ -76,7 +94,7 @@ Entidades principais:
    php -S 127.0.0.1:8000 -t public
    ```
 4. Acesse:
-   - `http://127.0.0.1:8000/index.php?page=login`
+   - `http://127.0.0.1:8000/`
 
 ## Credenciais demo
 

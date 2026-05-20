@@ -1,6 +1,6 @@
 <?php
 $isLogged = is_logged_in();
-$enterUrl = $isLogged ? '/index.php?page=dashboard' : '/index.php?page=login';
+$enterUrl = $isLogged ? app_url('index.php?page=dashboard') : app_url('index.php?page=login');
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -8,8 +8,8 @@ $enterUrl = $isLogged ? '/index.php?page=dashboard' : '/index.php?page=login';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema TFD – Transporte Fora do Domicílio</title>
-    <link rel="stylesheet" href="/assets/style.css">
-    <link rel="stylesheet" href="/assets/home.css">
+    <link rel="stylesheet" href="<?= e(asset_url('style.css')) ?>">
+    <link rel="stylesheet" href="<?= e(asset_url('home.css')) ?>">
 </head>
 <body class="home-body">
 
@@ -218,6 +218,6 @@ cd tfd</code></pre>
     </div>
 </footer>
 
-<script src="/assets/app.js"></script>
+<script src="<?= e(asset_url('app.js')) ?>"></script>
 </body>
 </html>

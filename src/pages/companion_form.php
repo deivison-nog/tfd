@@ -84,7 +84,7 @@ if (is_post()) {
         </label>
         <div class="full actions-row">
             <button type="submit">Salvar acompanhante</button>
-            <a class="btn secondary" href="/index.php?page=companions">Cancelar</a>
+            <a class="btn secondary" href="index.php?page=companions">Cancelar</a>
         </div>
     </form>
 </section>

@@ -25,7 +25,7 @@ $historyRows = $history->fetchAll();
 <section>
     <div class="section-head">
         <h2>Processo <?= e($process['process_number']) ?></h2>
-        <a class="btn" href="/index.php?page=process_form&id=<?= (int) $process['id'] ?>">Editar processo</a>
+        <a class="btn" href="index.php?page=process_form&id=<?= (int) $process['id'] ?>">Editar processo</a>
     </div>
 
     <div class="panel details-grid">
@@ -46,7 +46,7 @@ $historyRows = $history->fetchAll();
     <div class="split-panels">
         <div class="panel">
             <h3>Acompanhantes</h3>
-            <a class="btn secondary" href="/index.php?page=companion_form&process_id=<?= (int) $id ?>">Novo acompanhante</a>
+            <a class="btn secondary" href="index.php?page=companion_form&process_id=<?= (int) $id ?>">Novo acompanhante</a>
             <ul>
                 <?php if (!$companionsRows): ?>
                     <li>Sem acompanhantes cadastrados.</li>
@@ -58,7 +58,7 @@ $historyRows = $history->fetchAll();
 
         <div class="panel">
             <h3>Documentos (opcionais)</h3>
-            <a class="btn secondary" href="/index.php?page=documents&entity_type=process&entity_id=<?= (int) $id ?>">Gerenciar documentos</a>
+            <a class="btn secondary" href="index.php?page=documents&entity_type=process&entity_id=<?= (int) $id ?>">Gerenciar documentos</a>
             <ul>
                 <?php if (!$documentRows): ?>
                     <li>Nenhum documento registrado.</li>
