@@ -40,9 +40,9 @@ function verify_csrf(): void
 
 function current_page(array $allowedPages): string
 {
-    $page = $_GET['page'] ?? 'dashboard';
+    $page = $_GET['page'] ?? 'home';
 
-    return in_array($page, $allowedPages, true) ? $page : 'dashboard';
+    return in_array($page, $allowedPages, true) ? $page : 'home';
 }
 
 function flash(string $type, string $message): void

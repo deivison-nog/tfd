@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../src/bootstrap.php';
 
 $allowedPages = [
+    'home',
     'login',
     'logout',
     'dashboard',
@@ -30,8 +31,16 @@ if ($page === 'logout') {
     redirect('/index.php?page=login');
 }
 
-if ($page !== 'login') {
+$publicPages = ['home', 'login'];
+
+if (!in_array($page, $publicPages, true)) {
     require_login();
+}
+
+// The home page manages its own full HTML layout
+if ($page === 'home') {
+    require __DIR__ . '/../src/pages/home.php';
+    exit;
 }
 
 require __DIR__ . '/../src/views/header.php';
