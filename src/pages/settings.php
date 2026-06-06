@@ -157,6 +157,111 @@ if (is_post()) {
         redirect('/index.php?page=settings#novo-usuario');
     }
 
+    // ── Edit user ──────────────────────────────────────────────────────────────
+    if ($action === 'edit_user') {
+        $pdo = db();
+
+        $userId              = (int) ($_POST['user_id'] ?? 0);
+        $editName            = trim((string) ($_POST['edit_name'] ?? ''));
+        $editUsername        = trim((string) ($_POST['edit_username'] ?? ''));
+        $editRole            = trim((string) ($_POST['edit_role'] ?? ''));
+        $editActive          = (int) ($_POST['edit_active'] ?? 1) === 1 ? 1 : 0;
+        $editPassword        = (string) ($_POST['edit_password'] ?? '');
+        $editPasswordConfirm = (string) ($_POST['edit_password_confirm'] ?? '');
+
+        if ($userId <= 0 || $editName === '' || $editUsername === '' || $editRole === '') {
+            flash('error', 'Dados inválidos para editar o usuário.');
+            redirect('/index.php?page=settings#novo-usuario');
+        }
+
+        if (!array_key_exists($editRole, available_roles())) {
+            flash('error', 'Perfil inválido selecionado.');
+            redirect('/index.php?page=settings#novo-usuario');
+        }
+
+        $userRowStmt = $pdo->prepare('SELECT id, role FROM users WHERE id = :id');
+        $userRowStmt->execute(['id' => $userId]);
+        $userRow = $userRowStmt->fetch();
+
+        if (!$userRow) {
+            flash('error', 'Usuário não encontrado.');
+            redirect('/index.php?page=settings#novo-usuario');
+        }
+
+        $currentRole = (string) $userRow['role'];
+
+        if ($editRole === 'admin' && $currentRole !== 'admin') {
+            flash('error', 'Não é possível criar um segundo perfil Administrativo.');
+            redirect('/index.php?page=settings#novo-usuario');
+        }
+
+        if ($currentRole === 'admin') {
+            if ($editRole !== 'admin') {
+                flash('error', 'O usuário administrativo não pode mudar de perfil.');
+                redirect('/index.php?page=settings#novo-usuario');
+            }
+            $editActive = 1;
+        }
+
+        if ($editPassword !== '' || $editPasswordConfirm !== '') {
+            if ($editPassword !== $editPasswordConfirm) {
+                flash('error', 'As senhas não conferem.');
+                redirect('/index.php?page=settings#novo-usuario');
+            }
+
+            if (strlen($editPassword) < 6) {
+                flash('error', 'A senha deve ter pelo menos 6 caracteres.');
+                redirect('/index.php?page=settings#novo-usuario');
+            }
+        }
+
+        try {
+            if ($editPassword !== '') {
+                $pdo->prepare(
+                    'UPDATE users
+                     SET username = :username,
+                         name = :name,
+                         role = :role,
+                         active = :active,
+                         password_hash = :password_hash,
+                         updated_at = :updated_at
+                     WHERE id = :id'
+                )->execute([
+                    'username'      => $editUsername,
+                    'name'          => $editName,
+                    'role'          => $editRole,
+                    'active'        => $editActive,
+                    'password_hash' => password_hash($editPassword, PASSWORD_DEFAULT),
+                    'updated_at'    => $now,
+                    'id'            => $userId,
+                ]);
+            } else {
+                $pdo->prepare(
+                    'UPDATE users
+                     SET username = :username,
+                         name = :name,
+                         role = :role,
+                         active = :active,
+                         updated_at = :updated_at
+                     WHERE id = :id'
+                )->execute([
+                    'username'   => $editUsername,
+                    'name'       => $editName,
+                    'role'       => $editRole,
+                    'active'     => $editActive,
+                    'updated_at' => $now,
+                    'id'         => $userId,
+                ]);
+            }
+
+            flash('success', 'Usuário atualizado com sucesso.');
+        } catch (Throwable $e) {
+            flash('error', 'Não foi possível atualizar o usuário. Verifique se o login já está em uso.');
+        }
+
+        redirect('/index.php?page=settings#novo-usuario');
+    }
+
     // ── Save permissions (default) ─────────────────────────────────────────────
     $pdo = db();
     $pdo->beginTransaction();
@@ -246,7 +351,10 @@ $allRoles  = all_roles_list();
 </section>
 
 <section id="perfis">
-    <div class="section-head"><h2>Gerenciar Perfis</h2></div>
+    <div class="section-head">
+        <h2>Gerenciar Perfis</h2>
+        <button type="button" class="btn js-open-create-role-modal">Incluir novo perfil</button>
+    </div>
 
     <div class="panel">
         <table>
@@ -308,58 +416,36 @@ $allRoles  = all_roles_list();
                 </label>
                 <div class="full actions-row">
                     <button type="submit">Salvar alteração</button>
-                    <button type="button" class="btn secondary" data-close-role-modal>Cancelar</button>
+                    <button type="button" class="btn secondary" data-close-modal>Cancelar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div class="panel">
-        <h3>Incluir Novo Perfil</h3>
-        <form method="post" class="grid-form">
-            <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-            <input type="hidden" name="action" value="create_role">
-            <label>Nome do perfil *
-                <input type="text" name="role_label" required placeholder="Ex: Enfermeiro">
-            </label>
-            <div class="full actions-row">
-                <button type="submit">Criar perfil</button>
-            </div>
-        </form>
+    <div class="modal-overlay" data-create-role-modal>
+        <div class="modal-card">
+            <h3>Incluir Novo Perfil</h3>
+            <form method="post" class="grid-form">
+                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                <input type="hidden" name="action" value="create_role">
+                <label>Nome do perfil *
+                    <input type="text" name="role_label" required placeholder="Ex: Enfermeiro">
+                </label>
+                <div class="full actions-row">
+                    <button type="submit">Criar perfil</button>
+                    <button type="button" class="btn secondary" data-close-modal>Cancelar</button>
+                </div>
+            </form>
+        </div>
     </div>
 </section>
 
 <section id="novo-usuario">
-    <div class="section-head"><h2>Incluir Novo Usuário</h2></div>
-    <p>Crie um novo acesso ao sistema informando os dados abaixo.</p>
-
-    <form method="post" class="grid-form panel">
-        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-        <input type="hidden" name="action" value="create_user">
-        <label>Nome completo *
-            <input type="text" name="new_name" required>
-        </label>
-        <label>Login *
-            <input type="text" name="new_username" required autocomplete="off">
-        </label>
-        <label>Perfil *
-            <select name="new_role" required>
-                <?php foreach ($roles as $roleKey => $roleLabel): ?>
-                    <?php if ($roleKey === 'admin'): continue; endif; ?>
-                    <option value="<?= e($roleKey) ?>"><?= e($roleLabel) ?></option>
-                <?php endforeach; ?>
-            </select>
-        </label>
-        <label>Senha * (mínimo 6 caracteres)
-            <input type="password" name="new_password" required minlength="6" autocomplete="new-password">
-        </label>
-        <label>Confirmar senha *
-            <input type="password" name="new_password_confirm" required minlength="6" autocomplete="new-password">
-        </label>
-        <div class="full actions-row">
-            <button type="submit">Criar usuário</button>
-        </div>
-    </form>
+    <div class="section-head">
+        <h2>Gerenciar Usuários</h2>
+        <button type="button" class="btn js-open-create-user-modal">Incluir novo usuário</button>
+    </div>
+    <p>Edite os acessos existentes ou inclua novos usuários.</p>
 
     <?php if ($allUsers): ?>
         <div class="panel" style="margin-top: 1rem;">
@@ -371,6 +457,7 @@ $allRoles  = all_roles_list();
                     <th>Nome</th>
                     <th>Perfil</th>
                     <th>Ativo</th>
+                    <th>Ações</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -380,10 +467,98 @@ $allRoles  = all_roles_list();
                         <td><?= e($u['name']) ?></td>
                         <td><?= e(get_role_label((string) $u['role'])) ?></td>
                         <td><?= (int) $u['active'] === 1 ? 'Sim' : 'Não' ?></td>
+                        <td class="actions">
+                            <button
+                                type="button"
+                                class="link js-open-edit-user-modal"
+                                data-user-id="<?= (int) $u['id'] ?>"
+                                data-user-name="<?= e((string) $u['name']) ?>"
+                                data-user-username="<?= e((string) $u['username']) ?>"
+                                data-user-role="<?= e((string) $u['role']) ?>"
+                                data-user-active="<?= (int) $u['active'] ?>"
+                            >
+                                Editar
+                            </button>
+                        </td>
                     </tr>
                 <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
     <?php endif; ?>
+
+    <div class="modal-overlay" data-create-user-modal>
+        <div class="modal-card">
+            <h3>Incluir Novo Usuário</h3>
+            <form method="post" class="grid-form">
+                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                <input type="hidden" name="action" value="create_user">
+                <label>Nome completo *
+                    <input type="text" name="new_name" required>
+                </label>
+                <label>Login *
+                    <input type="text" name="new_username" required autocomplete="off">
+                </label>
+                <label>Perfil *
+                    <select name="new_role" required>
+                        <?php foreach ($roles as $roleKey => $roleLabel): ?>
+                            <?php if ($roleKey === 'admin'): continue; endif; ?>
+                            <option value="<?= e($roleKey) ?>"><?= e($roleLabel) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </label>
+                <label>Senha * (mínimo 6 caracteres)
+                    <input type="password" name="new_password" required minlength="6" autocomplete="new-password">
+                </label>
+                <label>Confirmar senha *
+                    <input type="password" name="new_password_confirm" required minlength="6" autocomplete="new-password">
+                </label>
+                <div class="full actions-row">
+                    <button type="submit">Criar usuário</button>
+                    <button type="button" class="btn secondary" data-close-modal>Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" data-edit-user-modal>
+        <div class="modal-card">
+            <h3>Editar usuário</h3>
+            <form method="post" class="grid-form">
+                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                <input type="hidden" name="action" value="edit_user">
+                <input type="hidden" name="user_id" value="" data-edit-user-id>
+
+                <label>Nome completo *
+                    <input type="text" name="edit_name" required value="" data-edit-user-name>
+                </label>
+                <label>Login *
+                    <input type="text" name="edit_username" required autocomplete="off" value="" data-edit-user-username>
+                </label>
+                <label>Perfil *
+                    <select name="edit_role" required data-edit-user-role>
+                        <?php foreach ($roles as $roleKey => $roleLabel): ?>
+                            <option value="<?= e($roleKey) ?>"><?= e($roleLabel) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </label>
+                <label>Status
+                    <select name="edit_active" data-edit-user-active>
+                        <option value="1">Ativo</option>
+                        <option value="0">Inativo</option>
+                    </select>
+                </label>
+                <label>Nova senha (opcional)
+                    <input type="password" name="edit_password" minlength="6" autocomplete="new-password">
+                </label>
+                <label>Confirmar nova senha
+                    <input type="password" name="edit_password_confirm" minlength="6" autocomplete="new-password">
+                </label>
+                <div class="full actions-row">
+                    <button type="submit">Salvar usuário</button>
+                    <button type="button" class="btn secondary" data-close-modal>Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </section>

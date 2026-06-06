@@ -15,39 +15,82 @@ function applyCpfMask(input) {
 document.addEventListener('DOMContentLoaded', function () {
   document.querySelectorAll('[data-mask="cpf"]').forEach(applyCpfMask);
 
-  var roleModal = document.querySelector('[data-role-modal]');
-  if (!roleModal) return;
+  var managedModals = [];
 
-  var roleIdInput = roleModal.querySelector('[data-role-id-input]');
-  var roleLabelInput = roleModal.querySelector('[data-role-label-input]');
-
-  function closeRoleModal() {
-    roleModal.classList.remove('is-open');
-  }
-
-  function openRoleModal(roleId, roleLabel) {
-    roleIdInput.value = roleId;
-    roleLabelInput.value = roleLabel;
-    roleModal.classList.add('is-open');
-    roleLabelInput.focus();
-    roleLabelInput.select();
-  }
-
-  document.querySelectorAll('.js-open-role-modal').forEach(function (button) {
-    button.addEventListener('click', function () {
-      openRoleModal(this.dataset.roleId || '', this.dataset.roleLabel || '');
+  function closeAllModals() {
+    managedModals.forEach(function (modal) {
+      modal.classList.remove('is-open');
     });
+  }
+
+  function setupModal(config) {
+    var modal = document.querySelector(config.modalSelector);
+    if (!modal) return;
+
+    managedModals.push(modal);
+
+    function close() {
+      modal.classList.remove('is-open');
+    }
+
+    function open(button) {
+      if (typeof config.beforeOpen === 'function') {
+        config.beforeOpen(button, modal);
+      }
+      modal.classList.add('is-open');
+    }
+
+    document.querySelectorAll(config.triggerSelector).forEach(function (button) {
+      button.addEventListener('click', function () {
+        open(this);
+      });
+    });
+
+    modal.querySelectorAll('[data-close-modal]').forEach(function (button) {
+      button.addEventListener('click', close);
+    });
+
+    modal.addEventListener('click', function (event) {
+      if (event.target === modal) close();
+    });
+  }
+
+  setupModal({
+    modalSelector: '[data-role-modal]',
+    triggerSelector: '.js-open-role-modal',
+    beforeOpen: function (button, modal) {
+      var roleIdInput = modal.querySelector('[data-role-id-input]');
+      var roleLabelInput = modal.querySelector('[data-role-label-input]');
+      roleIdInput.value = button.dataset.roleId || '';
+      roleLabelInput.value = button.dataset.roleLabel || '';
+      roleLabelInput.focus();
+      roleLabelInput.select();
+    }
   });
 
-  roleModal.querySelectorAll('[data-close-role-modal]').forEach(function (button) {
-    button.addEventListener('click', closeRoleModal);
+  setupModal({
+    modalSelector: '[data-create-role-modal]',
+    triggerSelector: '.js-open-create-role-modal'
   });
 
-  roleModal.addEventListener('click', function (event) {
-    if (event.target === roleModal) closeRoleModal();
+  setupModal({
+    modalSelector: '[data-create-user-modal]',
+    triggerSelector: '.js-open-create-user-modal'
+  });
+
+  setupModal({
+    modalSelector: '[data-edit-user-modal]',
+    triggerSelector: '.js-open-edit-user-modal',
+    beforeOpen: function (button, modal) {
+      modal.querySelector('[data-edit-user-id]').value = button.dataset.userId || '';
+      modal.querySelector('[data-edit-user-name]').value = button.dataset.userName || '';
+      modal.querySelector('[data-edit-user-username]').value = button.dataset.userUsername || '';
+      modal.querySelector('[data-edit-user-role]').value = button.dataset.userRole || '';
+      modal.querySelector('[data-edit-user-active]').value = button.dataset.userActive || '1';
+    }
   });
 
   document.addEventListener('keydown', function (event) {
-    if (event.key === 'Escape') closeRoleModal();
+    if (event.key === 'Escape') closeAllModals();
   });
 });
