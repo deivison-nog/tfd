@@ -16,7 +16,7 @@ $menuItems = current_menu_items();
     <?php if ($user): ?>
         <aside class="sidebar">
             <h1>TFD</h1>
-            <p class="subtitle">Gestão Operacional</p>
+            <p class="subtitle">Gestão de Saúde</p>
             <nav>
                 <?php foreach ($menuItems as $item): ?>
                     <a href="<?= e($item['url']) ?>"><?= e($item['label']) ?></a>

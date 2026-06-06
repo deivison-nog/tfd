@@ -201,17 +201,6 @@ foreach ($roles as $role => $label) {
 $pdo       = db();
 $allUsers  = $pdo->query('SELECT id, username, name, role, active FROM users ORDER BY id DESC')->fetchAll();
 $allRoles  = all_roles_list();
-
-$editRoleId  = (int) ($_GET['edit_role'] ?? 0);
-$editRoleRow = null;
-if ($editRoleId > 0) {
-    foreach ($allRoles as $r) {
-        if ((int) $r['id'] === $editRoleId) {
-            $editRoleRow = $r;
-            break;
-        }
-    }
-}
 ?>
 <section>
     <div class="section-head"><h2>Configuração</h2></div>
@@ -259,24 +248,6 @@ if ($editRoleId > 0) {
 <section id="perfis">
     <div class="section-head"><h2>Gerenciar Perfis</h2></div>
 
-    <?php if ($editRoleRow): ?>
-        <div class="panel">
-            <h3>Editar perfil: <?= e((string) $editRoleRow['label']) ?></h3>
-            <form method="post" class="grid-form">
-                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-                <input type="hidden" name="action" value="edit_role">
-                <input type="hidden" name="role_id" value="<?= (int) $editRoleRow['id'] ?>">
-                <label>Nome do perfil *
-                    <input type="text" name="role_label" required value="<?= e((string) $editRoleRow['label']) ?>">
-                </label>
-                <div class="full actions-row">
-                    <button type="submit">Salvar alteração</button>
-                    <a class="btn secondary" href="index.php?page=settings#perfis">Cancelar</a>
-                </div>
-            </form>
-        </div>
-    <?php endif; ?>
-
     <div class="panel">
         <table>
             <thead>
@@ -298,7 +269,14 @@ if ($editRoleId > 0) {
                         <?php endif; ?>
                     </td>
                     <td class="actions">
-                        <a href="index.php?page=settings&edit_role=<?= (int) $r['id'] ?>#perfis">Editar</a>
+                        <button
+                            type="button"
+                            class="link js-open-role-modal"
+                            data-role-id="<?= (int) $r['id'] ?>"
+                            data-role-label="<?= e((string) $r['label']) ?>"
+                        >
+                            Editar
+                        </button>
                         <?php if ((string) $r['role_key'] !== 'admin'): ?>
                             <form method="post" style="display:inline;">
                                 <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
@@ -316,6 +294,24 @@ if ($editRoleId > 0) {
             <?php endforeach; ?>
             </tbody>
         </table>
+    </div>
+
+    <div class="modal-overlay" data-role-modal>
+        <div class="modal-card">
+            <h3>Editar perfil</h3>
+            <form method="post" class="grid-form">
+                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                <input type="hidden" name="action" value="edit_role">
+                <input type="hidden" name="role_id" value="" data-role-id-input>
+                <label>Nome do perfil *
+                    <input type="text" name="role_label" required value="" data-role-label-input>
+                </label>
+                <div class="full actions-row">
+                    <button type="submit">Salvar alteração</button>
+                    <button type="button" class="btn secondary" data-close-role-modal>Cancelar</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <div class="panel">
