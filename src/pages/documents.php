@@ -137,13 +137,13 @@ if (is_post()) {
         }
 
         $storageDir = $projectRoot . '/data/uploads/documents/' . $payload['entity_type'] . '/' . $payload['entity_id'];
-        if (!is_dir($storageDir) && !mkdir($storageDir, 0775, true) && !is_dir($storageDir)) {
+        if (!is_dir($storageDir) && !mkdir($storageDir, 0755, true) && !is_dir($storageDir)) {
             flash('error', 'Não foi possível preparar a pasta de upload.');
             redirect($redirectUrl);
         }
 
         $safeDocumentType = slugify($payload['document_type']);
-        $storedFilename = date('YmdHis') . '_' . bin2hex(random_bytes(8)) . '_' . ($safeDocumentType !== '' ? $safeDocumentType : 'documento') . '.' . $extension;
+        $storedFilename = bin2hex(random_bytes(16)) . '_' . ($safeDocumentType !== '' ? $safeDocumentType : 'documento') . '.' . $extension;
         $relativePath = 'data/uploads/documents/' . $payload['entity_type'] . '/' . $payload['entity_id'] . '/' . $storedFilename;
         $destinationPath = $projectRoot . '/' . $relativePath;
 

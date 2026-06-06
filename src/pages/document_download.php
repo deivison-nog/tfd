@@ -29,7 +29,7 @@ if (!is_file($absolutePath)) {
 }
 
 $downloadName = trim((string) ($document['original_name'] ?: basename($absolutePath)));
-$downloadName = str_replace(["\r", "\n"], '', $downloadName);
+$downloadName = preg_replace('/[\x00-\x1F\x7F"\\\\]+/', '', $downloadName) ?: 'documento';
 $asciiName = preg_replace('/[^A-Za-z0-9._-]/', '_', $downloadName) ?: 'documento';
 $mimeType = 'application/octet-stream';
 
