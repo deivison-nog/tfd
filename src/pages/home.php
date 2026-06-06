@@ -1,6 +1,6 @@
 <?php
 $isLogged = is_logged_in();
-$enterUrl = $isLogged ? app_url('index.php?page=dashboard') : app_url('index.php?page=login');
+$enterUrl = $isLogged ? app_url(user_home_url()) : app_url('index.php?page=login');
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">

@@ -21,6 +21,7 @@ $allowedPages = [
     'trips',
     'trip_form',
     'flow',
+    'settings',
 ];
 
 $page = current_page($allowedPages);
@@ -35,6 +36,7 @@ $publicPages = ['home', 'login'];
 
 if (!in_array($page, $publicPages, true)) {
     require_login();
+    require_page_access($page);
 }
 
 // The home page manages its own full HTML layout

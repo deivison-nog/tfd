@@ -6,7 +6,11 @@ Aplicação web em **PHP + CSS + JavaScript** para gestão operacional e adminis
 
 - **Autenticação e sessão**
   - Tela de login
-  - Usuário demo: `tfdcolares` / senha `tfd123`
+  - Usuários demo:
+    - Administrativo: `tfdcolares` / `tfd123`
+    - Assistente Social: `assistente.social` / `tfd123`
+    - Médico: `medico.tfd` / `tfd123`
+    - Auxiliar Administrativo: `auxiliar.adm` / `tfd123`
   - Proteção de páginas internas por sessão
 - **Dashboard** com indicadores principais
 - **Gestão de pacientes**
@@ -27,6 +31,12 @@ Aplicação web em **PHP + CSS + JavaScript** para gestão operacional e adminis
   - Página com fluxo em **SVG**
 - **Viagens**
   - Agendamento e acompanhamento de execução/retorno/conclusão
+- **Controle de acesso por perfil**
+  - Perfis: Administrativo, Assistente Social, Médico e Auxiliar Administrativo
+  - Tela de **Configuração** para marcar/desmarcar acesso a cada item do menu lateral
+  - Perfil administrativo com acesso total
+- **Parecer profissional**
+  - Campo no processo TFD com registro do profissional logado e data/hora da atualização
 
 ## Stack
 
@@ -98,8 +108,10 @@ Entidades principais:
 
 ## Credenciais demo
 
-- Usuário: `tfdcolares`
-- Senha: `tfd123`
+- Administrativo: `tfdcolares` / `tfd123`
+- Assistente Social: `assistente.social` / `tfd123`
+- Médico: `medico.tfd` / `tfd123`
+- Auxiliar Administrativo: `auxiliar.adm` / `tfd123`
 
 ## Observações de MVP
 

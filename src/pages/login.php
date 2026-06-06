@@ -1,6 +1,6 @@
 <?php
 if (is_logged_in()) {
-    redirect('/index.php?page=dashboard');
+    redirect(user_home_url());
 }
 
 if (is_post()) {
@@ -10,7 +10,7 @@ if (is_post()) {
 
     if (attempt_login($username, $password)) {
         flash('success', 'Login realizado com sucesso.');
-        redirect('/index.php?page=dashboard');
+        redirect(user_home_url());
     }
 
     flash('error', 'Usuário ou senha inválidos.');
@@ -31,6 +31,10 @@ if (is_post()) {
         <button type="submit">Entrar</button>
     </form>
     <div class="demo-box">
-        <strong>Demo:</strong> usuário <code>tfdcolares</code> | senha <code>tfd123</code>
+        <strong>Demo:</strong><br>
+        <code>tfdcolares</code> (Administrativo) | senha <code>tfd123</code><br>
+        <code>assistente.social</code> (Assistente Social) | senha <code>tfd123</code><br>
+        <code>medico.tfd</code> (Médico) | senha <code>tfd123</code><br>
+        <code>auxiliar.adm</code> (Auxiliar Administrativo) | senha <code>tfd123</code>
     </div>
 </section>

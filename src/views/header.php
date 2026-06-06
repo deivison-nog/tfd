@@ -1,6 +1,7 @@
 <?php
 $flash = get_flash();
 $user = current_user();
+$menuItems = current_menu_items();
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -17,16 +18,15 @@ $user = current_user();
             <h1>TFD</h1>
             <p class="subtitle">Gestão Operacional</p>
             <nav>
-                <a href="index.php?page=dashboard">Dashboard</a>
-                <a href="index.php?page=patients">Pacientes</a>
-                <a href="index.php?page=processes">Processos TFD</a>
-                <a href="index.php?page=companions">Acompanhantes</a>
-                <a href="index.php?page=documents">Documentos</a>
-                <a href="index.php?page=trips">Viagens</a>
-                <a href="index.php?page=flow">Fluxo (SVG)</a>
+                <?php foreach ($menuItems as $item): ?>
+                    <a href="<?= e($item['url']) ?>"><?= e($item['label']) ?></a>
+                <?php endforeach; ?>
                 <a href="index.php?page=logout">Sair</a>
             </nav>
-            <small>Logado como <?= e($user['username']) ?></small>
+            <small>
+                Logado como <?= e($user['username']) ?>
+                (<?= e(ROLE_LABELS[$user['role']] ?? (string) $user['role']) ?>)
+            </small>
         </aside>
     <?php endif; ?>
     <main class="main-content<?= $user ? '' : ' is-public' ?>">

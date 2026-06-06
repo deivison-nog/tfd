@@ -36,9 +36,13 @@ CREATE TABLE tfd_processes (
     status TEXT NOT NULL,
     companion_required INTEGER NOT NULL DEFAULT 0,
     notes TEXT,
+    professional_opinion TEXT,
+    professional_opinion_by INTEGER,
+    professional_opinion_at TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT,
-    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE RESTRICT
+    FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE RESTRICT,
+    FOREIGN KEY (professional_opinion_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
 CREATE TABLE companions (
@@ -94,4 +98,13 @@ CREATE TABLE trips (
     created_at TEXT NOT NULL,
     updated_at TEXT,
     FOREIGN KEY (process_id) REFERENCES tfd_processes(id) ON DELETE CASCADE
+);
+
+CREATE TABLE role_permissions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    role TEXT NOT NULL,
+    menu_key TEXT NOT NULL,
+    allowed INTEGER NOT NULL DEFAULT 1,
+    updated_at TEXT,
+    UNIQUE (role, menu_key)
 );

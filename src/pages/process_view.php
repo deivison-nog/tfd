@@ -1,7 +1,17 @@
 <?php
 $pdo = db();
 $id = (int) ($_GET['id'] ?? 0);
-$stmt = $pdo->prepare('SELECT p.*, pa.name AS patient_name, pa.cpf AS patient_cpf FROM tfd_processes p JOIN patients pa ON pa.id = p.patient_id WHERE p.id = :id');
+$stmt = $pdo->prepare('
+    SELECT
+        p.*,
+        pa.name AS patient_name,
+        pa.cpf AS patient_cpf,
+        u.name AS professional_opinion_author
+    FROM tfd_processes p
+    JOIN patients pa ON pa.id = p.patient_id
+    LEFT JOIN users u ON u.id = p.professional_opinion_by
+    WHERE p.id = :id
+');
 $stmt->execute(['id' => $id]);
 $process = $stmt->fetch();
 
@@ -41,6 +51,13 @@ $historyRows = $history->fetchAll();
         <div><strong>Prioridade:</strong> <?= e($process['priority']) ?></div>
         <div><strong>Acompanhante:</strong> <?= (int) $process['companion_required'] === 1 ? 'Sim' : 'Não' ?></div>
         <div class="full"><strong>Observações:</strong> <?= nl2br(e($process['notes'])) ?></div>
+        <div class="full">
+            <strong>Parecer profissional:</strong>
+            <?= nl2br(e((string) ($process['professional_opinion'] ?? ''))) ?: 'Não informado.' ?>
+            <?php if (!empty($process['professional_opinion_author'])): ?>
+                <br><small>Por: <?= e((string) $process['professional_opinion_author']) ?> em <?= e((string) $process['professional_opinion_at']) ?></small>
+            <?php endif; ?>
+        </div>
     </div>
 
     <div class="split-panels">
