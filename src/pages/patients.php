@@ -46,7 +46,7 @@ if ($q !== '') {
                     <td><?= e($patient['name']) ?></td>
                     <td><?= e($patient['cpf']) ?></td>
                     <td><?= e($patient['cns']) ?></td>
-                    <td><?= e($patient['phone']) ?></td>
+                    <td><?= e(format_phone((string) $patient['phone'])) ?></td>
                     <td class="actions">
                         <a href="index.php?page=patient_view&id=<?= (int) $patient['id'] ?>">Ver</a>
                         <a href="index.php?page=patient_form&id=<?= (int) $patient['id'] ?>">Editar</a>

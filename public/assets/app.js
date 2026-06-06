@@ -12,8 +12,23 @@ function applyCpfMask(input) {
   });
 }
 
+function applyPhoneMask(input) {
+  input.addEventListener('input', function () {
+    var v = this.value.replace(/\D/g, '').substring(0, 11);
+    if (v.length > 7) {
+      v = '(' + v.substring(0, 2) + ')' + v.substring(2, 7) + '-' + v.substring(7);
+    } else if (v.length > 2) {
+      v = '(' + v.substring(0, 2) + ')' + v.substring(2);
+    } else if (v.length > 0) {
+      v = '(' + v;
+    }
+    this.value = v;
+  });
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   document.querySelectorAll('[data-mask="cpf"]').forEach(applyCpfMask);
+  document.querySelectorAll('[data-mask="phone"]').forEach(applyPhoneMask);
 
   var managedModals = [];
 

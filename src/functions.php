@@ -100,6 +100,19 @@ function old(string $field, string $default = ''): string
     return $default;
 }
 
+function format_phone(string $phone): string
+{
+    $digits = preg_replace('/\D/', '', $phone);
+    if (strlen($digits) === 11) {
+        return '(' . substr($digits, 0, 2) . ')' . substr($digits, 2, 5) . '-' . substr($digits, 7);
+    }
+    if (strlen($digits) === 10) {
+        return '(' . substr($digits, 0, 2) . ')' . substr($digits, 2, 4) . '-' . substr($digits, 6);
+    }
+
+    return $phone;
+}
+
 function format_date(string $date): string
 {
     if ($date === '') {

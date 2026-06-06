@@ -22,7 +22,7 @@ $processes = $processesStmt->fetchAll();
     <div class="panel details-grid">
         <div><strong>CPF:</strong> <?= e($patient['cpf']) ?></div>
         <div><strong>CNS:</strong> <?= e($patient['cns']) ?></div>
-        <div><strong>Telefone:</strong> <?= e($patient['phone']) ?></div>
+        <div><strong>Telefone:</strong> <?= e(format_phone((string) $patient['phone'])) ?></div>
         <div><strong>Endereço:</strong> <?= e($patient['address']) ?></div>
         <div class="full"><strong>Observações:</strong> <?= nl2br(e($patient['notes'])) ?></div>
     </div>

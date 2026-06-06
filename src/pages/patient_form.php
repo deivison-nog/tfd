@@ -67,7 +67,7 @@ if (is_post()) {
             <input type="text" name="cns" value="<?= e($patient['cns']) ?>">
         </label>
         <label>Telefone
-            <input type="text" name="phone" value="<?= e($patient['phone']) ?>">
+            <input type="text" name="phone" value="<?= e($patient['phone']) ?>" data-mask="phone" placeholder="(91)99999-9999">
         </label>
         <label class="full">Endereço
             <input type="text" name="address" value="<?= e($patient['address']) ?>">

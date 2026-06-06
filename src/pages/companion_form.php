@@ -77,7 +77,7 @@ if (is_post()) {
             <input type="text" name="relationship" value="<?= e((string) $companion['relationship']) ?>">
         </label>
         <label>Telefone
-            <input type="text" name="phone" value="<?= e((string) $companion['phone']) ?>">
+            <input type="text" name="phone" value="<?= e((string) $companion['phone']) ?>" data-mask="phone" placeholder="(91)99999-9999">
         </label>
         <label class="full">Observações
             <textarea name="notes" rows="4"><?= e((string) $companion['notes']) ?></textarea>

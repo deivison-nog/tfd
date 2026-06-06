@@ -31,7 +31,7 @@ $rows = $pdo->query($sql)->fetchAll();
                     <td><?= e($row['name']) ?></td>
                     <td><?= e($row['cpf']) ?></td>
                     <td><?= e($row['relationship']) ?></td>
-                    <td><?= e($row['phone']) ?></td>
+                    <td><?= e(format_phone((string) $row['phone'])) ?></td>
                     <td><a href="index.php?page=process_view&id=<?= (int) $row['process_id'] ?>"><?= e($row['process_number']) ?></a></td>
                     <td class="actions">
                         <a href="index.php?page=companion_form&id=<?= (int) $row['id'] ?>">Editar</a>
