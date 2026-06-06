@@ -90,65 +90,65 @@ function ensure_access_control_schema(PDO $pdo): void
                 'updated_at' => $now,
             ]);
         }
+    }
+}
 
-        function ensure_process_opinions_schema(PDO $pdo): void
-        {
-            $pdo->exec(
-                'CREATE TABLE IF NOT EXISTS process_professional_opinions (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    process_id INTEGER NOT NULL,
-                    opinion_text TEXT NOT NULL,
-                    created_by INTEGER NOT NULL,
-                    created_at TEXT NOT NULL,
-                    updated_at TEXT,
-                    FOREIGN KEY (process_id) REFERENCES tfd_processes(id) ON DELETE CASCADE,
-                    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT
-                )'
-            );
+function ensure_process_opinions_schema(PDO $pdo): void
+{
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS process_professional_opinions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            process_id INTEGER NOT NULL,
+            opinion_text TEXT NOT NULL,
+            created_by INTEGER NOT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT,
+            FOREIGN KEY (process_id) REFERENCES tfd_processes(id) ON DELETE CASCADE,
+            FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT
+        )'
+    );
 
-            $pdo->exec('CREATE INDEX IF NOT EXISTS idx_process_professional_opinions_process ON process_professional_opinions(process_id)');
-            $pdo->exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_process_professional_opinions_legacy_unique ON process_professional_opinions(process_id, opinion_text, created_by, created_at)');
+    $pdo->exec('CREATE INDEX IF NOT EXISTS idx_process_professional_opinions_process ON process_professional_opinions(process_id)');
+    $pdo->exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_process_professional_opinions_legacy_unique ON process_professional_opinions(process_id, opinion_text, created_by, created_at)');
 
-            $legacyOpinionRows = $pdo->query("
-                SELECT id, professional_opinion, professional_opinion_by, professional_opinion_at
-                FROM tfd_processes
-                WHERE TRIM(COALESCE(professional_opinion, '')) <> ''
-            ")->fetchAll();
+    $legacyOpinionRows = $pdo->query("
+        SELECT id, professional_opinion, professional_opinion_by, professional_opinion_at
+        FROM tfd_processes
+        WHERE TRIM(COALESCE(professional_opinion, '')) <> ''
+    ")->fetchAll();
 
-            if (!$legacyOpinionRows) {
-                return;
-            }
+    if (!$legacyOpinionRows) {
+        return;
+    }
 
-            $insertLegacy = $pdo->prepare('
-                INSERT OR IGNORE INTO process_professional_opinions (
-                    process_id,
-                    opinion_text,
-                    created_by,
-                    created_at,
-                    updated_at
-                ) VALUES (
-                    :process_id,
-                    :opinion_text,
-                    :created_by,
-                    :created_at,
-                    NULL
-                )
-            ');
+    $insertLegacy = $pdo->prepare('
+        INSERT OR IGNORE INTO process_professional_opinions (
+            process_id,
+            opinion_text,
+            created_by,
+            created_at,
+            updated_at
+        ) VALUES (
+            :process_id,
+            :opinion_text,
+            :created_by,
+            :created_at,
+            NULL
+        )
+    ');
 
-            foreach ($legacyOpinionRows as $row) {
-                $createdBy = (int) ($row['professional_opinion_by'] ?? 0);
-                if ($createdBy <= 0) {
-                    continue;
-                }
-
-                $insertLegacy->execute([
-                    'process_id' => (int) $row['id'],
-                    'opinion_text' => trim((string) $row['professional_opinion']),
-                    'created_by' => $createdBy,
-                    'created_at' => (string) ($row['professional_opinion_at'] ?: date('Y-m-d H:i:s')),
-                ]);
-            }
+    foreach ($legacyOpinionRows as $row) {
+        $createdBy = (int) ($row['professional_opinion_by'] ?? 0);
+        if ($createdBy <= 0) {
+            continue;
         }
+
+        $insertLegacy->execute([
+            'process_id' => (int) $row['id'],
+            'opinion_text' => trim((string) $row['professional_opinion']),
+            'created_by' => $createdBy,
+            'created_at' => (string) ($row['professional_opinion_at'] ?: date('Y-m-d H:i:s')),
+        ]);
     }
 }
 
