@@ -45,6 +45,20 @@ CREATE TABLE tfd_processes (
     FOREIGN KEY (professional_opinion_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
+CREATE TABLE process_professional_opinions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    process_id INTEGER NOT NULL,
+    opinion_text TEXT NOT NULL,
+    created_by INTEGER NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT,
+    FOREIGN KEY (process_id) REFERENCES tfd_processes(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE RESTRICT
+);
+
+CREATE INDEX idx_process_professional_opinions_process ON process_professional_opinions(process_id);
+CREATE UNIQUE INDEX idx_process_professional_opinions_legacy_unique ON process_professional_opinions(process_id, opinion_text, created_by, created_at);
+
 CREATE TABLE companions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     process_id INTEGER NOT NULL,

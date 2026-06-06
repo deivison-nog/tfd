@@ -36,7 +36,9 @@ Aplicação web em **PHP + CSS + JavaScript** para gestão operacional e adminis
   - Tela de **Configuração** para marcar/desmarcar acesso a cada item do menu lateral
   - Perfil administrativo com acesso total
 - **Parecer profissional**
-  - Campo no processo TFD com registro do profissional logado e data/hora da atualização
+  - Registro de múltiplos pareceres por processo na tela de visualização
+  - Cada usuário pode editar apenas os pareceres que criou
+  - Visibilidade controlada por permissão na tela de **Configuração**
 
 ## Stack
 
@@ -71,6 +73,7 @@ Entidades principais:
 - `documents`
 - `status_history`
 - `trips`
+- `process_professional_opinions`
 
 ## Como executar localmente
 

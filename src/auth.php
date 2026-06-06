@@ -22,6 +22,10 @@ const MENU_ITEMS = [
     'settings' => ['label' => 'Configuração', 'url' => 'index.php?page=settings'],
 ];
 
+const EXTRA_PERMISSION_ITEMS = [
+    'professional_opinion' => ['label' => 'Parecer profissional'],
+];
+
 const PAGE_PERMISSION_MAP = [
     'dashboard' => 'dashboard',
     'patients' => 'patients',
@@ -93,19 +97,26 @@ function is_admin(): bool
 
 function role_permissions(string $role): array
 {
+    $permissionKeys = array_keys(permission_items());
+
     if ($role === 'admin') {
-        return array_fill_keys(array_keys(MENU_ITEMS), true);
+        return array_fill_keys($permissionKeys, true);
     }
 
     $stmt = db()->prepare('SELECT menu_key, allowed FROM role_permissions WHERE role = :role');
     $stmt->execute(['role' => $role]);
     $rows = $stmt->fetchAll();
 
-    $permissions = array_fill_keys(array_keys(MENU_ITEMS), false);
+    $permissions = array_fill_keys($permissionKeys, false);
     foreach ($rows as $row) {
         $menuKey = (string) $row['menu_key'];
         if (array_key_exists($menuKey, $permissions)) {
             $permissions[$menuKey] = (int) $row['allowed'] === 1;
+        }
+
+        function permission_items(): array
+        {
+            return MENU_ITEMS + EXTRA_PERMISSION_ITEMS;
         }
     }
 

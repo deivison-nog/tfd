@@ -22,9 +22,6 @@ $process = [
     'status' => 'cadastrado',
     'companion_required' => 0,
     'notes' => '',
-    'professional_opinion' => '',
-    'professional_opinion_by' => null,
-    'professional_opinion_at' => null,
 ];
 
 if ($id > 0) {
@@ -53,7 +50,6 @@ if (is_post()) {
         'status' => trim((string) ($_POST['status'] ?? 'cadastrado')),
         'companion_required' => isset($_POST['companion_required']) ? 1 : 0,
         'notes' => trim((string) ($_POST['notes'] ?? '')),
-        'professional_opinion' => trim((string) ($_POST['professional_opinion'] ?? '')),
     ];
 
     if ($payload['process_number'] === '' || $payload['opening_year'] < 2000 || $payload['update_year'] < 2000 || $payload['treatment_location'] === '' || $payload['patient_id'] <= 0) {
@@ -67,23 +63,8 @@ if (is_post()) {
             $currentStatusStmt->execute(['id' => $id]);
             $previousStatus = (string) $currentStatusStmt->fetchColumn();
 
-            $existingOpinion = trim((string) ($process['professional_opinion'] ?? ''));
-            $newOpinion = $payload['professional_opinion'];
-            $opinionBy = $process['professional_opinion_by'];
-            $opinionAt = $process['professional_opinion_at'];
-
-            if ($newOpinion === '') {
-                $opinionBy = null;
-                $opinionAt = null;
-            } elseif ($newOpinion !== $existingOpinion) {
-                $opinionBy = (int) (current_user()['id'] ?? 0) ?: null;
-                $opinionAt = date('Y-m-d H:i:s');
-            }
-
-            $stmt = $pdo->prepare('UPDATE tfd_processes SET process_number=:process_number, opening_year=:opening_year, update_year=:update_year, treatment_location=:treatment_location, patient_id=:patient_id, cid=:cid, specialty=:specialty, destination_city=:destination_city, request_date=:request_date, priority=:priority, status=:status, companion_required=:companion_required, notes=:notes, professional_opinion=:professional_opinion, professional_opinion_by=:professional_opinion_by, professional_opinion_at=:professional_opinion_at, updated_at=:updated_at WHERE id=:id');
+            $stmt = $pdo->prepare('UPDATE tfd_processes SET process_number=:process_number, opening_year=:opening_year, update_year=:update_year, treatment_location=:treatment_location, patient_id=:patient_id, cid=:cid, specialty=:specialty, destination_city=:destination_city, request_date=:request_date, priority=:priority, status=:status, companion_required=:companion_required, notes=:notes, updated_at=:updated_at WHERE id=:id');
             $stmt->execute($payload + [
-                'professional_opinion_by' => $opinionBy,
-                'professional_opinion_at' => $opinionAt,
                 'updated_at' => date('Y-m-d H:i:s'),
                 'id' => $id,
             ]);
@@ -102,10 +83,8 @@ if (is_post()) {
 
             flash('success', 'Processo atualizado com sucesso.');
         } else {
-            $stmt = $pdo->prepare('INSERT INTO tfd_processes (process_number, opening_year, update_year, treatment_location, patient_id, cid, specialty, destination_city, request_date, priority, status, companion_required, notes, professional_opinion, professional_opinion_by, professional_opinion_at, created_at) VALUES (:process_number, :opening_year, :update_year, :treatment_location, :patient_id, :cid, :specialty, :destination_city, :request_date, :priority, :status, :companion_required, :notes, :professional_opinion, :professional_opinion_by, :professional_opinion_at, :created_at)');
+            $stmt = $pdo->prepare('INSERT INTO tfd_processes (process_number, opening_year, update_year, treatment_location, patient_id, cid, specialty, destination_city, request_date, priority, status, companion_required, notes, created_at) VALUES (:process_number, :opening_year, :update_year, :treatment_location, :patient_id, :cid, :specialty, :destination_city, :request_date, :priority, :status, :companion_required, :notes, :created_at)');
             $stmt->execute($payload + [
-                'professional_opinion_by' => $payload['professional_opinion'] !== '' ? (current_user()['id'] ?? null) : null,
-                'professional_opinion_at' => $payload['professional_opinion'] !== '' ? date('Y-m-d H:i:s') : null,
                 'created_at' => date('Y-m-d H:i:s'),
             ]);
             $processId = (int) $pdo->lastInsertId();
@@ -185,9 +164,6 @@ if (is_post()) {
         </label>
         <label class="full">Observações
             <textarea name="notes" rows="4"><?= e((string) $process['notes']) ?></textarea>
-        </label>
-        <label class="full">Parecer profissional
-            <textarea name="professional_opinion" rows="4"><?= e((string) ($process['professional_opinion'] ?? '')) ?></textarea>
         </label>
         <div class="full actions-row">
             <button type="submit">Salvar processo</button>

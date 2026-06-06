@@ -6,7 +6,7 @@ if (($user['role'] ?? '') !== 'admin') {
 }
 
 $roles = available_roles();
-$menuItems = MENU_ITEMS;
+$permissionItems = permission_items();
 $now = date('Y-m-d H:i:s');
 
 if (is_post()) {
@@ -23,7 +23,7 @@ if (is_post()) {
         );
 
         foreach ($roles as $role => $label) {
-            foreach ($menuItems as $menuKey => $menuItem) {
+            foreach ($permissionItems as $menuKey => $menuItem) {
                 $allowed = $role === 'admin'
                     ? 1
                     : (isset($_POST['permissions'][$role][$menuKey]) ? 1 : 0);
@@ -63,7 +63,7 @@ foreach ($roles as $role => $label) {
             <thead>
             <tr>
                 <th>Perfil</th>
-                <?php foreach ($menuItems as $menuItem): ?>
+                <?php foreach ($permissionItems as $menuItem): ?>
                     <th><?= e($menuItem['label']) ?></th>
                 <?php endforeach; ?>
             </tr>
@@ -72,7 +72,7 @@ foreach ($roles as $role => $label) {
             <?php foreach ($roles as $role => $label): ?>
                 <tr>
                     <td><strong><?= e($label) ?></strong></td>
-                    <?php foreach ($menuItems as $menuKey => $menuItem): ?>
+                    <?php foreach ($permissionItems as $menuKey => $menuItem): ?>
                         <td style="text-align: center;">
                             <input
                                 type="checkbox"
