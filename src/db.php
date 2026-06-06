@@ -52,6 +52,7 @@ function ensure_database_initialized(PDO $pdo): void
     ensure_tfd_processes_schema($pdo);
     ensure_process_opinions_schema($pdo);
     ensure_default_role_users($pdo);
+    ensure_roles_schema($pdo);
 }
 
 function ensure_access_control_schema(PDO $pdo): void
@@ -191,5 +192,28 @@ function ensure_default_role_users(PDO $pdo): void
             'role' => $seedUser['role'],
             'created_at' => date('Y-m-d H:i:s'),
         ]);
+    }
+}
+
+function ensure_roles_schema(PDO $pdo): void
+{
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS roles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            role_key TEXT NOT NULL UNIQUE,
+            label TEXT NOT NULL,
+            active INTEGER NOT NULL DEFAULT 1,
+            created_at TEXT NOT NULL
+        )'
+    );
+
+    $builtinRoles = ROLE_LABELS;
+    $stmt = $pdo->prepare(
+        'INSERT OR IGNORE INTO roles (role_key, label, active, created_at)
+         VALUES (:role_key, :label, 1, :created_at)'
+    );
+    $now = date('Y-m-d H:i:s');
+    foreach ($builtinRoles as $key => $label) {
+        $stmt->execute(['role_key' => $key, 'label' => $label, 'created_at' => $now]);
     }
 }

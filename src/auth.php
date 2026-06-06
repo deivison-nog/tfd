@@ -176,7 +176,45 @@ function require_page_access(string $page): void
 
 function available_roles(): array
 {
-    return ROLE_LABELS;
+    $stmt = db()->prepare('SELECT role_key, label FROM roles WHERE active = 1 ORDER BY id ASC');
+    $stmt->execute();
+    $rows = $stmt->fetchAll();
+
+    if (!$rows) {
+        return ROLE_LABELS;
+    }
+
+    $result = [];
+    foreach ($rows as $row) {
+        $result[(string) $row['role_key']] = (string) $row['label'];
+    }
+
+    return $result;
+}
+
+function all_roles_list(): array
+{
+    $stmt = db()->prepare('SELECT * FROM roles ORDER BY id ASC');
+    $stmt->execute();
+    return $stmt->fetchAll();
+}
+
+function get_role_label(string $roleKey): string
+{
+    static $cache;
+
+    if ($cache === null) {
+        $cache = [];
+        try {
+            $rows = db()->query('SELECT role_key, label FROM roles')->fetchAll();
+            foreach ($rows as $row) {
+                $cache[(string) $row['role_key']] = (string) $row['label'];
+            }
+        } catch (Throwable $ignored) {
+        }
+    }
+
+    return $cache[$roleKey] ?? (ROLE_LABELS[$roleKey] ?? $roleKey);
 }
 
 function user_home_url(): string

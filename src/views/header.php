@@ -25,7 +25,7 @@ $menuItems = current_menu_items();
             </nav>
             <small>
                 Logado como <?= e($user['username']) ?>
-                (<?= e(ROLE_LABELS[$user['role']] ?? (string) $user['role']) ?>)
+                (<?= e(get_role_label((string) $user['role'])) ?>)
             </small>
         </aside>
     <?php endif; ?>

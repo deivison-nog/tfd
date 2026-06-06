@@ -14,21 +14,116 @@ if (is_post()) {
 
     $action = trim((string) ($_POST['action'] ?? 'save_permissions'));
 
+    // ── Create role ────────────────────────────────────────────────────────────
+    if ($action === 'create_role') {
+        $pdo = db();
+        $newLabel = trim((string) ($_POST['role_label'] ?? ''));
+
+        if ($newLabel === '') {
+            flash('error', 'Informe um nome para o perfil.');
+            redirect('/index.php?page=settings#perfis');
+        }
+
+        $roleKey = slugify($newLabel);
+
+        if ($roleKey === 'admin') {
+            flash('error', 'Não é possível criar um segundo perfil Administrativo.');
+            redirect('/index.php?page=settings#perfis');
+        }
+
+        if ($roleKey === '') {
+            flash('error', 'Nome de perfil inválido.');
+            redirect('/index.php?page=settings#perfis');
+        }
+
+        // Ensure uniqueness
+        $check = $pdo->prepare('SELECT id FROM roles WHERE role_key = :key');
+        $check->execute(['key' => $roleKey]);
+        if ($check->fetch()) {
+            $roleKey = $roleKey . '_' . time();
+        }
+
+        try {
+            $pdo->prepare('INSERT INTO roles (role_key, label, active, created_at) VALUES (:key, :label, 1, :now)')
+                ->execute(['key' => $roleKey, 'label' => $newLabel, 'now' => $now]);
+            flash('success', 'Perfil "' . $newLabel . '" criado com sucesso.');
+        } catch (Throwable $e) {
+            flash('error', 'Não foi possível criar o perfil.');
+        }
+
+        redirect('/index.php?page=settings#perfis');
+    }
+
+    // ── Edit role label ────────────────────────────────────────────────────────
+    if ($action === 'edit_role') {
+        $pdo = db();
+        $roleId   = (int) ($_POST['role_id'] ?? 0);
+        $newLabel = trim((string) ($_POST['role_label'] ?? ''));
+
+        if ($roleId <= 0 || $newLabel === '') {
+            flash('error', 'Dados inválidos para editar o perfil.');
+            redirect('/index.php?page=settings#perfis');
+        }
+
+        try {
+            $pdo->prepare('UPDATE roles SET label = :label WHERE id = :id')
+                ->execute(['label' => $newLabel, 'id' => $roleId]);
+            flash('success', 'Perfil atualizado com sucesso.');
+        } catch (Throwable $e) {
+            flash('error', 'Não foi possível atualizar o perfil.');
+        }
+
+        redirect('/index.php?page=settings#perfis');
+    }
+
+    // ── Toggle role active ─────────────────────────────────────────────────────
+    if ($action === 'toggle_role') {
+        $pdo    = db();
+        $roleId = (int) ($_POST['role_id'] ?? 0);
+
+        $row = $pdo->prepare('SELECT role_key, active FROM roles WHERE id = :id');
+        $row->execute(['id' => $roleId]);
+        $roleData = $row->fetch();
+
+        if (!$roleData) {
+            flash('error', 'Perfil não encontrado.');
+            redirect('/index.php?page=settings#perfis');
+        }
+
+        if ((string) $roleData['role_key'] === 'admin') {
+            flash('error', 'O perfil Administrativo não pode ser desativado.');
+            redirect('/index.php?page=settings#perfis');
+        }
+
+        $newActive = (int) $roleData['active'] === 1 ? 0 : 1;
+        $pdo->prepare('UPDATE roles SET active = :active WHERE id = :id')
+            ->execute(['active' => $newActive, 'id' => $roleId]);
+
+        flash('success', $newActive ? 'Perfil ativado com sucesso.' : 'Perfil desativado com sucesso.');
+        redirect('/index.php?page=settings#perfis');
+    }
+
+    // ── Create user ────────────────────────────────────────────────────────────
     if ($action === 'create_user') {
         $pdo = db();
 
-        $newName     = trim((string) ($_POST['new_name'] ?? ''));
-        $newUsername = trim((string) ($_POST['new_username'] ?? ''));
-        $newPassword = (string) ($_POST['new_password'] ?? '');
+        $newName            = trim((string) ($_POST['new_name'] ?? ''));
+        $newUsername        = trim((string) ($_POST['new_username'] ?? ''));
+        $newPassword        = (string) ($_POST['new_password'] ?? '');
         $newPasswordConfirm = (string) ($_POST['new_password_confirm'] ?? '');
-        $newRole     = trim((string) ($_POST['new_role'] ?? ''));
+        $newRole            = trim((string) ($_POST['new_role'] ?? ''));
 
         if ($newName === '' || $newUsername === '' || $newPassword === '' || $newRole === '') {
             flash('error', 'Preencha todos os campos obrigatórios para criar o usuário.');
             redirect('/index.php?page=settings#novo-usuario');
         }
 
-        if (!array_key_exists($newRole, ROLE_LABELS)) {
+        if ($newRole === 'admin') {
+            flash('error', 'Não é possível criar um segundo perfil Administrativo.');
+            redirect('/index.php?page=settings#novo-usuario');
+        }
+
+        if (!array_key_exists($newRole, available_roles())) {
             flash('error', 'Perfil inválido selecionado.');
             redirect('/index.php?page=settings#novo-usuario');
         }
@@ -44,11 +139,10 @@ if (is_post()) {
         }
 
         try {
-            $stmt = $pdo->prepare(
+            $pdo->prepare(
                 'INSERT INTO users (username, name, password_hash, role, active, created_at)
                  VALUES (:username, :name, :password_hash, :role, 1, :created_at)'
-            );
-            $stmt->execute([
+            )->execute([
                 'username'      => $newUsername,
                 'name'          => $newName,
                 'password_hash' => password_hash($newPassword, PASSWORD_DEFAULT),
@@ -63,7 +157,7 @@ if (is_post()) {
         redirect('/index.php?page=settings#novo-usuario');
     }
 
-    // Default: save permissions
+    // ── Save permissions (default) ─────────────────────────────────────────────
     $pdo = db();
     $pdo->beginTransaction();
 
@@ -81,9 +175,9 @@ if (is_post()) {
                     : (isset($_POST['permissions'][$role][$menuKey]) ? 1 : 0);
 
                 $upsert->execute([
-                    'role' => $role,
-                    'menu_key' => $menuKey,
-                    'allowed' => $allowed,
+                    'role'       => $role,
+                    'menu_key'   => $menuKey,
+                    'allowed'    => $allowed,
                     'updated_at' => $now,
                 ]);
             }
@@ -104,8 +198,20 @@ foreach ($roles as $role => $label) {
     $rolePermissions[$role] = role_permissions($role);
 }
 
-$pdo = db();
-$allUsers = $pdo->query('SELECT id, username, name, role, active FROM users ORDER BY id DESC')->fetchAll();
+$pdo       = db();
+$allUsers  = $pdo->query('SELECT id, username, name, role, active FROM users ORDER BY id DESC')->fetchAll();
+$allRoles  = all_roles_list();
+
+$editRoleId  = (int) ($_GET['edit_role'] ?? 0);
+$editRoleRow = null;
+if ($editRoleId > 0) {
+    foreach ($allRoles as $r) {
+        if ((int) $r['id'] === $editRoleId) {
+            $editRoleRow = $r;
+            break;
+        }
+    }
+}
 ?>
 <section>
     <div class="section-head"><h2>Configuração</h2></div>
@@ -150,6 +256,83 @@ $allUsers = $pdo->query('SELECT id, username, name, role, active FROM users ORDE
     </form>
 </section>
 
+<section id="perfis">
+    <div class="section-head"><h2>Gerenciar Perfis</h2></div>
+
+    <?php if ($editRoleRow): ?>
+        <div class="panel">
+            <h3>Editar perfil: <?= e((string) $editRoleRow['label']) ?></h3>
+            <form method="post" class="grid-form">
+                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                <input type="hidden" name="action" value="edit_role">
+                <input type="hidden" name="role_id" value="<?= (int) $editRoleRow['id'] ?>">
+                <label>Nome do perfil *
+                    <input type="text" name="role_label" required value="<?= e((string) $editRoleRow['label']) ?>">
+                </label>
+                <div class="full actions-row">
+                    <button type="submit">Salvar alteração</button>
+                    <a class="btn secondary" href="index.php?page=settings#perfis">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    <?php endif; ?>
+
+    <div class="panel">
+        <table>
+            <thead>
+            <tr>
+                <th>Perfil</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($allRoles as $r): ?>
+                <tr>
+                    <td><strong><?= e((string) $r['label']) ?></strong></td>
+                    <td>
+                        <?php if ((int) $r['active'] === 1): ?>
+                            <span class="badge" style="background:#dcf7e8;color:#175c3f;">Ativo</span>
+                        <?php else: ?>
+                            <span class="badge" style="background:#ffe6e3;color:#8d1f18;">Inativo</span>
+                        <?php endif; ?>
+                    </td>
+                    <td class="actions">
+                        <a href="index.php?page=settings&edit_role=<?= (int) $r['id'] ?>#perfis">Editar</a>
+                        <?php if ((string) $r['role_key'] !== 'admin'): ?>
+                            <form method="post" style="display:inline;">
+                                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                                <input type="hidden" name="action" value="toggle_role">
+                                <input type="hidden" name="role_id" value="<?= (int) $r['id'] ?>">
+                                <button type="submit" class="link <?= (int) $r['active'] === 1 ? 'danger' : '' ?>">
+                                    <?= (int) $r['active'] === 1 ? 'Desativar' : 'Ativar' ?>
+                                </button>
+                            </form>
+                        <?php else: ?>
+                            <span style="color:#aaa;font-size:.85rem;">Protegido</span>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="panel">
+        <h3>Incluir Novo Perfil</h3>
+        <form method="post" class="grid-form">
+            <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+            <input type="hidden" name="action" value="create_role">
+            <label>Nome do perfil *
+                <input type="text" name="role_label" required placeholder="Ex: Enfermeiro">
+            </label>
+            <div class="full actions-row">
+                <button type="submit">Criar perfil</button>
+            </div>
+        </form>
+    </div>
+</section>
+
 <section id="novo-usuario">
     <div class="section-head"><h2>Incluir Novo Usuário</h2></div>
     <p>Crie um novo acesso ao sistema informando os dados abaixo.</p>
@@ -166,6 +349,7 @@ $allUsers = $pdo->query('SELECT id, username, name, role, active FROM users ORDE
         <label>Perfil *
             <select name="new_role" required>
                 <?php foreach ($roles as $roleKey => $roleLabel): ?>
+                    <?php if ($roleKey === 'admin'): continue; endif; ?>
                     <option value="<?= e($roleKey) ?>"><?= e($roleLabel) ?></option>
                 <?php endforeach; ?>
             </select>
@@ -198,7 +382,7 @@ $allUsers = $pdo->query('SELECT id, username, name, role, active FROM users ORDE
                     <tr>
                         <td><?= e($u['username']) ?></td>
                         <td><?= e($u['name']) ?></td>
-                        <td><?= e(ROLE_LABELS[$u['role']] ?? $u['role']) ?></td>
+                        <td><?= e(get_role_label((string) $u['role'])) ?></td>
                         <td><?= (int) $u['active'] === 1 ? 'Sim' : 'Não' ?></td>
                     </tr>
                 <?php endforeach; ?>

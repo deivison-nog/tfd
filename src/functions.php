@@ -121,3 +121,19 @@ function format_datetime(string $datetime): string
 
     return $d ? $d->format('d/m/Y H:i') : $datetime;
 }
+
+function slugify(string $text): string
+{
+    $text = mb_strtolower($text, 'UTF-8');
+    $text = strtr($text, [
+        'á' => 'a', 'à' => 'a', 'ã' => 'a', 'â' => 'a', 'ä' => 'a',
+        'é' => 'e', 'è' => 'e', 'ê' => 'e', 'ë' => 'e',
+        'í' => 'i', 'ì' => 'i', 'î' => 'i', 'ï' => 'i',
+        'ó' => 'o', 'ò' => 'o', 'õ' => 'o', 'ô' => 'o', 'ö' => 'o',
+        'ú' => 'u', 'ù' => 'u', 'û' => 'u', 'ü' => 'u',
+        'ç' => 'c', 'ñ' => 'n',
+    ]);
+    $text = (string) preg_replace('/[^a-z0-9]+/', '_', $text);
+
+    return trim($text, '_');
+}
