@@ -137,3 +137,21 @@ function slugify(string $text): string
 
     return trim($text, '_');
 }
+
+function safe_download_name(string $filename, string $fallback = 'documento'): string
+{
+    $filename = trim($filename);
+    $filename = preg_replace('/[\x00-\x1F\x7F"\\\\]+/', '', $filename) ?: $fallback;
+    $filename = trim($filename, '. ');
+
+    return $filename !== '' ? $filename : $fallback;
+}
+
+function ascii_download_name(string $filename, string $fallback = 'documento'): string
+{
+    $filename = safe_download_name($filename, $fallback);
+    $ascii = preg_replace('/[^A-Za-z0-9._-]/', '_', $filename) ?: $fallback;
+    $ascii = trim($ascii, '. ');
+
+    return $ascii !== '' ? $ascii : $fallback;
+}

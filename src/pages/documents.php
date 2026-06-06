@@ -14,8 +14,8 @@ $allowedExtensions = [
     'png' => ['image/png'],
     'jpg' => ['image/jpeg'],
     'jpeg' => ['image/jpeg'],
-    'doc' => ['application/msword', 'application/octet-stream'],
-    'docx' => ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip', 'application/octet-stream'],
+    'doc' => ['application/msword'],
+    'docx' => ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip'],
 ];
 $entityTables = [
     'patient' => 'patients',
@@ -143,7 +143,7 @@ if (is_post()) {
         }
 
         $safeDocumentType = slugify($payload['document_type']);
-        $storedFilename = bin2hex(random_bytes(16)) . '_' . ($safeDocumentType !== '' ? $safeDocumentType : 'documento') . '.' . $extension;
+        $storedFilename = bin2hex(random_bytes(16)) . ($safeDocumentType !== '' ? '_' . $safeDocumentType : '') . '.' . $extension;
         $relativePath = 'data/uploads/documents/' . $payload['entity_type'] . '/' . $payload['entity_id'] . '/' . $storedFilename;
         $destinationPath = $projectRoot . '/' . $relativePath;
 
