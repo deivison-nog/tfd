@@ -54,8 +54,8 @@ $rows = $stmt->fetchAll();
                 <tr>
                     <td><?= e($row['process_number']) ?></td>
                     <td><?= e($row['patient_name']) ?></td>
-                    <td><?= e($row['departure_date']) ?> <?= e((string) $row['departure_time']) ?></td>
-                    <td><?= e((string) $row['return_date']) ?> <?= e((string) $row['return_time']) ?></td>
+                    <td><?= e(format_date((string) $row['departure_date'])) ?> <?= e((string) $row['departure_time']) ?></td>
+                    <td><?= e(format_date((string) $row['return_date'])) ?> <?= e((string) $row['return_time']) ?></td>
                     <td><?= e((string) $row['transport_type']) ?></td>
                     <td><span class="badge"><?= e($row['execution_status']) ?></span></td>
                     <td class="actions">

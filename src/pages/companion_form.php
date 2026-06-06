@@ -71,7 +71,7 @@ if (is_post()) {
             <input type="text" name="name" required value="<?= e((string) $companion['name']) ?>">
         </label>
         <label>CPF
-            <input type="text" name="cpf" value="<?= e((string) $companion['cpf']) ?>">
+            <input type="text" name="cpf" value="<?= e((string) $companion['cpf']) ?>" data-mask="cpf" placeholder="000.000.000-00">
         </label>
         <label>Parentesco
             <input type="text" name="relationship" value="<?= e((string) $companion['relationship']) ?>">

@@ -61,7 +61,7 @@ if (is_post()) {
             <input type="text" name="name" required value="<?= e($patient['name']) ?>">
         </label>
         <label>CPF *
-            <input type="text" name="cpf" required value="<?= e($patient['cpf']) ?>">
+            <input type="text" name="cpf" required value="<?= e($patient['cpf']) ?>" data-mask="cpf" placeholder="000.000.000-00">
         </label>
         <label>CNS / Cartão SUS
             <input type="text" name="cns" value="<?= e($patient['cns']) ?>">

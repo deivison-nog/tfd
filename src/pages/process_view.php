@@ -146,7 +146,7 @@ if ($canViewProfessionalOpinion) {
         <div><strong>CID:</strong> <?= e($process['cid']) ?></div>
         <div><strong>Especialidade:</strong> <?= e($process['specialty']) ?></div>
         <div><strong>Município destino:</strong> <?= e($process['destination_city']) ?></div>
-        <div><strong>Solicitação:</strong> <?= e($process['request_date']) ?></div>
+        <div><strong>Solicitação:</strong> <?= e(format_date((string) $process['request_date'])) ?></div>
         <div><strong>Prioridade:</strong> <?= e($process['priority']) ?></div>
         <div><strong>Acompanhante:</strong> <?= (int) $process['companion_required'] === 1 ? 'Sim' : 'Não' ?></div>
         <div class="full"><strong>Observações:</strong> <?= nl2br(e($process['notes'])) ?></div>
@@ -183,9 +183,9 @@ if ($canViewProfessionalOpinion) {
                             <?= nl2br(e($opinion['opinion_text'])) ?><br>
                             <small>
                                 Por: <?= e((string) $opinion['author_name']) ?>
-                                em <?= e((string) $opinion['created_at']) ?>
+                                em <?= e(format_datetime((string) $opinion['created_at'])) ?>
                                 <?php if (!empty($opinion['updated_at'])): ?>
-                                    (editado em <?= e((string) $opinion['updated_at']) ?>)
+                                    (editado em <?= e(format_datetime((string) $opinion['updated_at'])) ?>)
                                 <?php endif; ?>
                             </small>
                             <?php if ((int) $opinion['created_by'] === $currentUserId): ?>
@@ -239,7 +239,7 @@ if ($canViewProfessionalOpinion) {
                 <tr><td colspan="5">Sem histórico.</td></tr>
             <?php else: foreach ($historyRows as $row): ?>
                 <tr>
-                    <td><?= e($row['changed_at']) ?></td>
+                    <td><?= e(format_datetime((string) $row['changed_at'])) ?></td>
                     <td><?= e((string) $row['previous_status']) ?></td>
                     <td><?= e($row['new_status']) ?></td>
                     <td><?= e((string) $row['note']) ?></td>

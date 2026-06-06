@@ -99,3 +99,25 @@ function old(string $field, string $default = ''): string
 
     return $default;
 }
+
+function format_date(string $date): string
+{
+    if ($date === '') {
+        return '';
+    }
+
+    $d = \DateTime::createFromFormat('Y-m-d', substr($date, 0, 10));
+
+    return $d ? $d->format('d/m/Y') : $date;
+}
+
+function format_datetime(string $datetime): string
+{
+    if ($datetime === '') {
+        return '';
+    }
+
+    $d = \DateTime::createFromFormat('Y-m-d H:i:s', $datetime);
+
+    return $d ? $d->format('d/m/Y H:i') : $datetime;
+}
