@@ -17,7 +17,7 @@ if (!$document) {
 }
 
 $filePath = trim((string) ($document['file_path'] ?? ''));
-if ($filePath === '') {
+if ($filePath === '' || !str_starts_with($filePath, 'data/uploads/documents/')) {
     http_response_code(404);
     exit('Documento sem arquivo disponível.');
 }

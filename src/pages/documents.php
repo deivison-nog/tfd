@@ -64,7 +64,9 @@ if (is_post()) {
 
         $redirectUrl = documents_redirect_url((string) $document['entity_type'], (int) $document['entity_id']);
         $filePath = trim((string) ($document['file_path'] ?? ''));
-        $absolutePath = $filePath !== '' ? $projectRoot . '/' . ltrim($filePath, '/') : '';
+        $absolutePath = str_starts_with($filePath, 'data/uploads/documents/')
+            ? $projectRoot . '/' . ltrim($filePath, '/')
+            : '';
 
         if ($absolutePath !== '' && is_file($absolutePath) && !unlink($absolutePath)) {
             flash('error', 'Não foi possível remover o arquivo enviado.');
@@ -151,12 +153,20 @@ if (is_post()) {
         }
 
         $stmt = $pdo->prepare('INSERT INTO documents (entity_type, entity_id, document_type, original_name, file_path, upload_status, notes, created_at) VALUES (:entity_type, :entity_id, :document_type, :original_name, :file_path, :upload_status, :notes, :created_at)');
-        $stmt->execute($payload + [
-            'original_name' => $originalName,
-            'file_path' => $relativePath,
-            'upload_status' => 'upload concluído',
-            'created_at' => date('Y-m-d H:i:s'),
-        ]);
+        try {
+            $stmt->execute($payload + [
+                'original_name' => $originalName,
+                'file_path' => $relativePath,
+                'upload_status' => 'upload concluído',
+                'created_at' => date('Y-m-d H:i:s'),
+            ]);
+        } catch (Throwable $exception) {
+            if (is_file($destinationPath)) {
+                unlink($destinationPath);
+            }
+
+            throw $exception;
+        }
 
         flash('success', 'Documento enviado com sucesso.');
         redirect($redirectUrl);
