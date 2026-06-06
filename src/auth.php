@@ -26,6 +26,11 @@ const EXTRA_PERMISSION_ITEMS = [
     'professional_opinion' => ['label' => 'Parecer profissional'],
 ];
 
+function permission_items(): array
+{
+    return MENU_ITEMS + EXTRA_PERMISSION_ITEMS;
+}
+
 const PAGE_PERMISSION_MAP = [
     'dashboard' => 'dashboard',
     'patients' => 'patients',
@@ -113,11 +118,6 @@ function role_permissions(string $role): array
         if (array_key_exists($menuKey, $permissions)) {
             $permissions[$menuKey] = (int) $row['allowed'] === 1;
         }
-
-        function permission_items(): array
-        {
-            return MENU_ITEMS + EXTRA_PERMISSION_ITEMS;
-        }
     }
 
     return $permissions;
@@ -127,7 +127,7 @@ function user_permissions(?array $user = null): array
 {
     $user ??= current_user();
     if (!$user) {
-        return array_fill_keys(array_keys(MENU_ITEMS), false);
+        return array_fill_keys(array_keys(permission_items()), false);
     }
 
     return role_permissions((string) $user['role']);
@@ -155,6 +155,13 @@ function can_access_page(string $page): bool
     }
 
     $permissions = user_permissions();
+
+    return has_permission($permissionKey, $permissions);
+}
+
+function has_permission(string $permissionKey, ?array $permissions = null): bool
+{
+    $permissions ??= user_permissions();
 
     return !empty($permissions[$permissionKey]);
 }

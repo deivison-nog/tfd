@@ -109,11 +109,11 @@ function ensure_access_control_schema(PDO $pdo): void
             $pdo->exec('CREATE INDEX IF NOT EXISTS idx_process_professional_opinions_process ON process_professional_opinions(process_id)');
             $pdo->exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_process_professional_opinions_legacy_unique ON process_professional_opinions(process_id, opinion_text, created_by, created_at)');
 
-            $legacyOpinionRows = $pdo->query('
+            $legacyOpinionRows = $pdo->query("
                 SELECT id, professional_opinion, professional_opinion_by, professional_opinion_at
                 FROM tfd_processes
-                WHERE TRIM(COALESCE(professional_opinion, \'\')) <> \'\'
-            ')->fetchAll();
+                WHERE TRIM(COALESCE(professional_opinion, '')) <> ''
+            ")->fetchAll();
 
             if (!$legacyOpinionRows) {
                 return;
