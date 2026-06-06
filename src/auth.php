@@ -42,6 +42,7 @@ const PAGE_PERMISSION_MAP = [
     'companions' => 'companions',
     'companion_form' => 'companions',
     'documents' => 'documents',
+    'document_download' => 'documents',
     'trips' => 'trips',
     'trip_form' => 'trips',
     'flow' => 'flow',

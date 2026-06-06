@@ -24,8 +24,8 @@ Aplicação web em **PHP + CSS + JavaScript** para gestão operacional e adminis
   - Cadastro e vínculo com processo TFD
   - Campos: nome, CPF, parentesco, telefone, observações
 - **Documentos (opcionais)**
-  - Estrutura de anexos implementada para paciente, acompanhante e processo
-  - MVP registra metadados e já deixa UX/modelagem pronta para upload real
+  - Upload real de anexos para paciente, acompanhante e processo
+  - Download e exclusão de arquivos enviados pela tela de Documentos
 - **Fluxo operacional e status**
   - Status: cadastrado, aguardando análise, pendente de documentos, autorizado, agendado, em viagem, retornado, concluído, negado, cancelado
   - Página com fluxo em **SVG**
@@ -118,5 +118,6 @@ Entidades principais:
 
 ## Observações de MVP
 
-- Upload de arquivo real em documentos não foi ativado no MVP, mas a estrutura de dados e UX já estão prontas para evoluir.
+- Os documentos aceitam PDF, PNG, JPG, JPEG, DOC e DOCX com até 10 MB por arquivo.
+- Os arquivos enviados ficam armazenados em `data/uploads/documents/`.
 - O banco é inicializado automaticamente na primeira execução caso não exista.

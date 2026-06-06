@@ -18,6 +18,7 @@ $allowedPages = [
     'companions',
     'companion_form',
     'documents',
+    'document_download',
     'trips',
     'trip_form',
     'flow',
@@ -42,6 +43,11 @@ if (!in_array($page, $publicPages, true)) {
 // The home page manages its own full HTML layout
 if ($page === 'home') {
     require __DIR__ . '/../src/pages/home.php';
+    exit;
+}
+
+if ($page === 'document_download') {
+    require __DIR__ . '/../src/pages/document_download.php';
     exit;
 }
 

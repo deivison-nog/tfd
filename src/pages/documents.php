@@ -2,21 +2,79 @@
 $pdo = db();
 
 $entityTypes = ['patient', 'companion', 'process'];
-$entityType = trim((string) ($_GET['entity_type'] ?? 'process'));
-if (!in_array($entityType, $entityTypes, true)) {
-    $entityType = 'process';
+$entityType = trim((string) ($_GET['entity_type'] ?? ''));
+if ($entityType !== '' && !in_array($entityType, $entityTypes, true)) {
+    $entityType = '';
 }
 $entityId = (int) ($_GET['entity_id'] ?? 0);
+$formEntityType = $entityType !== '' ? $entityType : 'process';
+$projectRoot = dirname(__DIR__, 2);
+$allowedExtensions = [
+    'pdf' => ['application/pdf'],
+    'png' => ['image/png'],
+    'jpg' => ['image/jpeg'],
+    'jpeg' => ['image/jpeg'],
+    'doc' => ['application/msword', 'application/octet-stream'],
+    'docx' => ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip', 'application/octet-stream'],
+];
+$entityTables = [
+    'patient' => 'patients',
+    'companion' => 'companions',
+    'process' => 'tfd_processes',
+];
+
+function documents_redirect_url(string $entityType, int $entityId): string
+{
+    $query = ['page' => 'documents'];
+    if ($entityType !== '') {
+        $query['entity_type'] = $entityType;
+    }
+    if ($entityId > 0) {
+        $query['entity_id'] = (string) $entityId;
+    }
+
+    return '/index.php?' . http_build_query($query);
+}
+
+function document_exists(PDO $pdo, array $entityTables, string $entityType, int $entityId): bool
+{
+    if (!isset($entityTables[$entityType]) || $entityId <= 0) {
+        return false;
+    }
+
+    $stmt = $pdo->prepare('SELECT 1 FROM ' . $entityTables[$entityType] . ' WHERE id = :id LIMIT 1');
+    $stmt->execute(['id' => $entityId]);
+
+    return (bool) $stmt->fetchColumn();
+}
 
 if (is_post()) {
     verify_csrf();
 
     if (($_POST['action'] ?? '') === 'delete') {
         $id = (int) ($_POST['id'] ?? 0);
+        $stmt = $pdo->prepare('SELECT id, entity_type, entity_id, file_path FROM documents WHERE id = :id LIMIT 1');
+        $stmt->execute(['id' => $id]);
+        $document = $stmt->fetch();
+
+        if (!$document) {
+            flash('error', 'Documento não encontrado.');
+            redirect('/index.php?page=documents');
+        }
+
+        $redirectUrl = documents_redirect_url((string) $document['entity_type'], (int) $document['entity_id']);
+        $filePath = trim((string) ($document['file_path'] ?? ''));
+        $absolutePath = $filePath !== '' ? $projectRoot . '/' . ltrim($filePath, '/') : '';
+
+        if ($absolutePath !== '' && is_file($absolutePath) && !unlink($absolutePath)) {
+            flash('error', 'Não foi possível remover o arquivo enviado.');
+            redirect($redirectUrl);
+        }
+
         $stmt = $pdo->prepare('DELETE FROM documents WHERE id = :id');
         $stmt->execute(['id' => $id]);
         flash('success', 'Documento removido.');
-        redirect('/index.php?page=documents');
+        redirect($redirectUrl);
     }
 
     if (($_POST['action'] ?? '') === 'save') {
@@ -24,24 +82,84 @@ if (is_post()) {
             'entity_type' => trim((string) ($_POST['entity_type'] ?? 'process')),
             'entity_id' => (int) ($_POST['entity_id'] ?? 0),
             'document_type' => trim((string) ($_POST['document_type'] ?? '')),
-            'original_name' => trim((string) ($_POST['original_name'] ?? '')),
             'notes' => trim((string) ($_POST['notes'] ?? '')),
         ];
+        $redirectUrl = documents_redirect_url($payload['entity_type'], $payload['entity_id']);
+        $uploadedFile = $_FILES['document_file'] ?? null;
 
         if (!in_array($payload['entity_type'], $entityTypes, true) || $payload['entity_id'] <= 0 || $payload['document_type'] === '') {
             flash('error', 'Preencha os campos obrigatórios para documento.');
-            redirect('/index.php?page=documents');
+            redirect($redirectUrl);
+        }
+
+        if (!document_exists($pdo, $entityTables, $payload['entity_type'], $payload['entity_id'])) {
+            flash('error', 'A entidade informada não foi encontrada.');
+            redirect($redirectUrl);
+        }
+
+        if (!is_array($uploadedFile) || ($uploadedFile['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+            flash('error', 'Selecione um arquivo para upload.');
+            redirect($redirectUrl);
+        }
+
+        if (($uploadedFile['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+            flash('error', 'O upload falhou. Tente novamente.');
+            redirect($redirectUrl);
+        }
+
+        if (($uploadedFile['size'] ?? 0) > 10 * 1024 * 1024) {
+            flash('error', 'O arquivo deve ter no máximo 10 MB.');
+            redirect($redirectUrl);
+        }
+
+        $originalName = trim((string) ($uploadedFile['name'] ?? ''));
+        $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+        if (!isset($allowedExtensions[$extension])) {
+            flash('error', 'Formato inválido. Envie PDF, PNG, JPG, JPEG, DOC ou DOCX.');
+            redirect($redirectUrl);
+        }
+
+        $detectedMimeType = '';
+        $tmpName = (string) ($uploadedFile['tmp_name'] ?? '');
+        if ($tmpName !== '' && function_exists('finfo_open')) {
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            if ($finfo !== false) {
+                $detectedMimeType = (string) finfo_file($finfo, $tmpName);
+                finfo_close($finfo);
+            }
+        }
+
+        if ($detectedMimeType !== '' && !in_array($detectedMimeType, $allowedExtensions[$extension], true)) {
+            flash('error', 'O arquivo enviado não corresponde ao formato informado.');
+            redirect($redirectUrl);
+        }
+
+        $storageDir = $projectRoot . '/data/uploads/documents/' . $payload['entity_type'] . '/' . $payload['entity_id'];
+        if (!is_dir($storageDir) && !mkdir($storageDir, 0775, true) && !is_dir($storageDir)) {
+            flash('error', 'Não foi possível preparar a pasta de upload.');
+            redirect($redirectUrl);
+        }
+
+        $safeDocumentType = slugify($payload['document_type']);
+        $storedFilename = date('YmdHis') . '_' . bin2hex(random_bytes(8)) . '_' . ($safeDocumentType !== '' ? $safeDocumentType : 'documento') . '.' . $extension;
+        $relativePath = 'data/uploads/documents/' . $payload['entity_type'] . '/' . $payload['entity_id'] . '/' . $storedFilename;
+        $destinationPath = $projectRoot . '/' . $relativePath;
+
+        if (!move_uploaded_file($tmpName, $destinationPath)) {
+            flash('error', 'Não foi possível salvar o arquivo enviado.');
+            redirect($redirectUrl);
         }
 
         $stmt = $pdo->prepare('INSERT INTO documents (entity_type, entity_id, document_type, original_name, file_path, upload_status, notes, created_at) VALUES (:entity_type, :entity_id, :document_type, :original_name, :file_path, :upload_status, :notes, :created_at)');
         $stmt->execute($payload + [
-            'file_path' => null,
-            'upload_status' => 'estrutura pronta para upload',
+            'original_name' => $originalName,
+            'file_path' => $relativePath,
+            'upload_status' => 'upload concluído',
             'created_at' => date('Y-m-d H:i:s'),
         ]);
 
-        flash('success', 'Documento registrado (estrutura pronta para upload real).');
-        redirect('/index.php?page=documents');
+        flash('success', 'Documento enviado com sucesso.');
+        redirect($redirectUrl);
     }
 }
 
@@ -67,26 +185,26 @@ $documents = $stmt->fetchAll();
 <section>
     <div class="section-head"><h2>Documentos (opcionais)</h2></div>
     <div class="panel">
-        <p>Modelagem pronta para upload. Nesta versão MVP, os metadados são registrados para preparar integração de anexos reais.</p>
-        <form method="post" class="grid-form">
+        <p>Envie anexos reais para paciente, acompanhante ou processo. Formatos aceitos: PDF, PNG, JPG, JPEG, DOC e DOCX (até 10 MB).</p>
+        <form method="post" class="grid-form" enctype="multipart/form-data">
             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
             <input type="hidden" name="action" value="save">
 
             <label>Entidade *
                 <select name="entity_type" id="entity_type">
-                    <option value="patient">Paciente (laudo)</option>
-                    <option value="companion">Acompanhante (comprovante/CPF/SUS/dados bancários)</option>
-                    <option value="process" selected>Processo TFD</option>
+                    <option value="patient" <?= $formEntityType === 'patient' ? 'selected' : '' ?>>Paciente (laudo)</option>
+                    <option value="companion" <?= $formEntityType === 'companion' ? 'selected' : '' ?>>Acompanhante (comprovante/CPF/SUS/dados bancários)</option>
+                    <option value="process" <?= $formEntityType === 'process' ? 'selected' : '' ?>>Processo TFD</option>
                 </select>
             </label>
             <label>ID da entidade *
-                <input type="number" name="entity_id" min="1" required>
+                <input type="number" name="entity_id" min="1" required value="<?= $entityId > 0 ? $entityId : '' ?>">
             </label>
             <label>Tipo do documento *
                 <input type="text" name="document_type" required placeholder="Ex.: laudo, CPF, comprovante residência">
             </label>
-            <label>Nome original do arquivo
-                <input type="text" name="original_name" placeholder="Ex.: laudo_joao.pdf">
+            <label>Arquivo *
+                <input type="file" name="document_file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" required>
             </label>
             <label class="full">Observações
                 <textarea name="notes" rows="3"></textarea>
@@ -119,9 +237,18 @@ $documents = $stmt->fetchAll();
                     <td><?= e($document['entity_type']) ?></td>
                     <td><?= (int) $document['entity_id'] ?></td>
                     <td><?= e($document['document_type']) ?></td>
-                    <td><?= e((string) $document['original_name']) ?></td>
+                    <td>
+                        <?php if (trim((string) ($document['file_path'] ?? '')) !== ''): ?>
+                            <a class="link" href="index.php?page=document_download&id=<?= (int) $document['id'] ?>"><?= e((string) $document['original_name']) ?></a>
+                        <?php else: ?>
+                            <?= e((string) $document['original_name']) ?>
+                        <?php endif; ?>
+                    </td>
                     <td><?= e($document['upload_status']) ?></td>
                     <td class="actions">
+                        <?php if (trim((string) ($document['file_path'] ?? '')) !== ''): ?>
+                            <a class="link" href="index.php?page=document_download&id=<?= (int) $document['id'] ?>">Baixar</a>
+                        <?php endif; ?>
                         <form method="post" onsubmit="return confirmDelete()">
                             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                             <input type="hidden" name="action" value="delete">
