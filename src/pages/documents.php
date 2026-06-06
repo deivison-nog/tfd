@@ -15,7 +15,7 @@ $allowedExtensions = [
     'jpg' => ['image/jpeg'],
     'jpeg' => ['image/jpeg'],
     'doc' => ['application/msword'],
-    'docx' => ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/zip'],
+    'docx' => ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
 ];
 $entityTables = [
     'patient' => 'patients',
@@ -46,6 +46,31 @@ function document_exists(PDO $pdo, array $entityTables, string $entityType, int 
     $stmt->execute(['id' => $entityId]);
 
     return (bool) $stmt->fetchColumn();
+}
+
+function uploaded_document_is_valid(string $tmpName, string $extension, string $detectedMimeType, array $allowedExtensions): bool
+{
+    if ($detectedMimeType === '') {
+        return true;
+    }
+
+    if (in_array($detectedMimeType, $allowedExtensions[$extension] ?? [], true)) {
+        return true;
+    }
+
+    if ($extension !== 'docx' || $detectedMimeType !== 'application/zip' || !class_exists('ZipArchive')) {
+        return false;
+    }
+
+    $zip = new ZipArchive();
+    if ($zip->open($tmpName) !== true) {
+        return false;
+    }
+
+    $hasDocumentXml = $zip->locateName('word/document.xml', ZipArchive::FL_NOCASE) !== false;
+    $zip->close();
+
+    return $hasDocumentXml;
 }
 
 if (is_post()) {
@@ -131,7 +156,7 @@ if (is_post()) {
             }
         }
 
-        if ($detectedMimeType !== '' && !in_array($detectedMimeType, $allowedExtensions[$extension], true)) {
+        if (!uploaded_document_is_valid($tmpName, $extension, $detectedMimeType, $allowedExtensions)) {
             flash('error', 'O arquivo enviado não corresponde ao formato informado.');
             redirect($redirectUrl);
         }
@@ -142,8 +167,7 @@ if (is_post()) {
             redirect($redirectUrl);
         }
 
-        $safeDocumentType = slugify($payload['document_type']);
-        $storedFilename = bin2hex(random_bytes(16)) . ($safeDocumentType !== '' ? '_' . $safeDocumentType : '') . '.' . $extension;
+        $storedFilename = bin2hex(random_bytes(16)) . '.' . $extension;
         $relativePath = 'data/uploads/documents/' . $payload['entity_type'] . '/' . $payload['entity_id'] . '/' . $storedFilename;
         $destinationPath = $projectRoot . '/' . $relativePath;
 

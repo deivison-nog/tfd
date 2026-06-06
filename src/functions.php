@@ -141,7 +141,7 @@ function slugify(string $text): string
 function safe_download_name(string $filename, string $fallback = 'documento'): string
 {
     $filename = trim($filename);
-    $filename = preg_replace('/[\x00-\x1F\x7F"\\\\]+/', '', $filename) ?: $fallback;
+    $filename = preg_replace('/[\x00-\x1F\x7F"\\\\\/:\|\*\?<>]+/', '', $filename) ?: $fallback;
     $filename = trim($filename, '. ');
 
     return $filename !== '' ? $filename : $fallback;

@@ -7,7 +7,7 @@ if ($id <= 0) {
     exit('Documento não encontrado.');
 }
 
-$stmt = $pdo->prepare('SELECT original_name, file_path FROM documents WHERE id = :id LIMIT 1');
+$stmt = $pdo->prepare('SELECT original_name, document_type, file_path FROM documents WHERE id = :id LIMIT 1');
 $stmt->execute(['id' => $id]);
 $document = $stmt->fetch();
 
@@ -28,7 +28,16 @@ if (!is_file($absolutePath)) {
     exit('Arquivo não encontrado.');
 }
 
-$downloadName = safe_download_name((string) ($document['original_name'] ?: basename($absolutePath)));
+$originalName = trim((string) ($document['original_name'] ?? ''));
+$extension = strtolower(pathinfo($absolutePath, PATHINFO_EXTENSION));
+$fallbackName = 'documento';
+if (trim((string) ($document['document_type'] ?? '')) !== '') {
+    $fallbackName .= '_' . slugify((string) $document['document_type']);
+}
+if ($extension !== '') {
+    $fallbackName .= '.' . $extension;
+}
+$downloadName = safe_download_name($originalName !== '' ? $originalName : $fallbackName);
 $asciiName = ascii_download_name($downloadName);
 $mimeType = 'application/octet-stream';
 
