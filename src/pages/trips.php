@@ -98,7 +98,7 @@ if ($status !== '') {
                             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                             <input type="hidden" name="action" value="update_status">
                             <input type="hidden" name="id" value="<?= (int) $row['id'] ?>">
-                            <select name="execution_status">
+                            <select name="execution_status" aria-label="Status da viagem">
                                 <?php foreach ($tripStatuses as $statusValue => $statusLabel): ?>
                                     <option value="<?= e($statusValue) ?>" <?= (string) $row['execution_status'] === $statusValue ? 'selected' : '' ?>><?= e($statusLabel) ?></option>
                                 <?php endforeach; ?>
