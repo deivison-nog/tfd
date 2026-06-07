@@ -19,9 +19,14 @@ $quickAccess = [
     'settings'   => ['label' => 'Configuração',    'url' => 'index.php?page=settings',   'emoji' => '⚙️'],
 ];
 $permissions = user_permissions();
+$currentUser = current_user();
+$welcomeName = trim((string) ($currentUser['name'] ?? $currentUser['username'] ?? ''));
 ?>
 <section>
-    <h2>📊 Dashboard</h2>
+    <div class="dashboard-head">
+        <h2>📊 Dashboard</h2>
+        <p class="dashboard-welcome">Bem vindo, <?= e($welcomeName !== '' ? $welcomeName : 'usuário') ?>.</p>
+    </div>
     <p>Visão inicial de operação do Transporte Fora do Domicílio.</p>
 
     <div class="cards">

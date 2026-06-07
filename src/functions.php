@@ -113,6 +113,42 @@ function format_phone(string $phone): string
     return $phone;
 }
 
+function render_pagination(string $routePage, int $currentPage, int $totalPages, array $query = []): string
+{
+    if ($totalPages <= 1) {
+        return '';
+    }
+
+    unset($query['p']);
+
+    $buildUrl = static function (int $page) use ($routePage, $query): string {
+        return 'index.php?' . http_build_query(array_merge(['page' => $routePage], $query, ['p' => $page]));
+    };
+
+    ob_start();
+    ?>
+    <nav class="pagination" aria-label="Paginação da lista">
+        <?php if ($currentPage > 1): ?>
+            <a class="pagination-link" href="<?= e($buildUrl($currentPage - 1)) ?>">&lt;&lt;</a>
+        <?php endif; ?>
+
+        <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+            <?php if ($i === $currentPage): ?>
+                <span class="pagination-link is-current"><?= $i ?></span>
+            <?php else: ?>
+                <a class="pagination-link" href="<?= e($buildUrl($i)) ?>"><?= $i ?></a>
+            <?php endif; ?>
+        <?php endfor; ?>
+
+        <?php if ($currentPage < $totalPages): ?>
+            <a class="pagination-link" href="<?= e($buildUrl($currentPage + 1)) ?>">&gt;</a>
+        <?php endif; ?>
+    </nav>
+    <?php
+
+    return (string) ob_get_clean();
+}
+
 function format_date(string $date): string
 {
     if ($date === '') {

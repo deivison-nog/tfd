@@ -18,27 +18,51 @@ $filters = [
     'status' => trim((string) ($_GET['status'] ?? '')),
     'priority' => trim((string) ($_GET['priority'] ?? '')),
 ];
+$perPage = 10;
+$currentPage = max(1, (int) ($_GET['p'] ?? 1));
 
-$sql = 'SELECT p.*, pa.name AS patient_name FROM tfd_processes p JOIN patients pa ON pa.id = p.patient_id WHERE 1=1';
+$baseSql = ' FROM tfd_processes p JOIN patients pa ON pa.id = p.patient_id WHERE 1=1';
 $params = [];
 
 if ($filters['q'] !== '') {
-    $sql .= ' AND (p.process_number LIKE :q OR pa.name LIKE :q OR p.cid LIKE :q)';
+    $baseSql .= ' AND (p.process_number LIKE :q OR pa.name LIKE :q OR p.cid LIKE :q)';
     $params['q'] = '%' . $filters['q'] . '%';
 }
 if ($filters['status'] !== '') {
-    $sql .= ' AND p.status = :status';
+    $baseSql .= ' AND p.status = :status';
     $params['status'] = $filters['status'];
 }
 if ($filters['priority'] !== '') {
-    $sql .= ' AND p.priority = :priority';
+    $baseSql .= ' AND p.priority = :priority';
     $params['priority'] = $filters['priority'];
 }
-$sql .= ' ORDER BY p.id DESC';
 
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
+$countStmt = $pdo->prepare('SELECT COUNT(*)' . $baseSql);
+$countStmt->execute($params);
+$totalItems = (int) $countStmt->fetchColumn();
+$totalPages = max(1, (int) ceil($totalItems / $perPage));
+$currentPage = min($currentPage, $totalPages);
+$offset = ($currentPage - 1) * $perPage;
+
+$stmt = $pdo->prepare('SELECT p.*, pa.name AS patient_name' . $baseSql . ' ORDER BY p.id DESC LIMIT :limit OFFSET :offset');
+foreach ($params as $key => $value) {
+    $stmt->bindValue(':' . $key, $value);
+}
+$stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+$stmt->execute();
 $processes = $stmt->fetchAll();
+
+$paginationQuery = [];
+if ($filters['q'] !== '') {
+    $paginationQuery['q'] = $filters['q'];
+}
+if ($filters['status'] !== '') {
+    $paginationQuery['status'] = $filters['status'];
+}
+if ($filters['priority'] !== '') {
+    $paginationQuery['priority'] = $filters['priority'];
+}
 ?>
 <section>
     <div class="section-head">
@@ -101,4 +125,5 @@ $processes = $stmt->fetchAll();
             </tbody>
         </table>
     </div>
+    <?= render_pagination('processes', $currentPage, $totalPages, $paginationQuery) ?>
 </section>

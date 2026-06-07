@@ -17,12 +17,39 @@ if (is_post()) {
 }
 
 $q = trim((string) ($_GET['q'] ?? ''));
+$perPage = 10;
+$currentPage = max(1, (int) ($_GET['p'] ?? 1));
+
 if ($q !== '') {
-    $stmt = $pdo->prepare('SELECT * FROM patients WHERE name LIKE :q OR cpf LIKE :q OR cns LIKE :q ORDER BY id DESC');
-    $stmt->execute(['q' => "%{$q}%"]);
+    $countStmt = $pdo->prepare('SELECT COUNT(*) FROM patients WHERE name LIKE :q OR cpf LIKE :q OR cns LIKE :q');
+    $countStmt->execute(['q' => "%{$q}%"]);
+    $totalItems = (int) $countStmt->fetchColumn();
+} else {
+    $totalItems = (int) $pdo->query('SELECT COUNT(*) FROM patients')->fetchColumn();
+}
+
+$totalPages = max(1, (int) ceil($totalItems / $perPage));
+$currentPage = min($currentPage, $totalPages);
+$offset = ($currentPage - 1) * $perPage;
+
+if ($q !== '') {
+    $stmt = $pdo->prepare('SELECT * FROM patients WHERE name LIKE :q OR cpf LIKE :q OR cns LIKE :q ORDER BY id DESC LIMIT :limit OFFSET :offset');
+    $stmt->bindValue(':q', "%{$q}%");
+    $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
     $patients = $stmt->fetchAll();
 } else {
-    $patients = $pdo->query('SELECT * FROM patients ORDER BY id DESC')->fetchAll();
+    $stmt = $pdo->prepare('SELECT * FROM patients ORDER BY id DESC LIMIT :limit OFFSET :offset');
+    $stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
+    $patients = $stmt->fetchAll();
+}
+
+$paginationQuery = [];
+if ($q !== '') {
+    $paginationQuery['q'] = $q;
 }
 ?>
 <section>
@@ -62,4 +89,5 @@ if ($q !== '') {
             </tbody>
         </table>
     </div>
+    <?= render_pagination('patients', $currentPage, $totalPages, $paginationQuery) ?>
 </section>

@@ -13,16 +13,36 @@ if (is_post()) {
 }
 
 $status = trim((string) ($_GET['status'] ?? ''));
-$sql = 'SELECT t.*, p.process_number, pa.name AS patient_name FROM trips t JOIN tfd_processes p ON p.id = t.process_id JOIN patients pa ON pa.id = p.patient_id WHERE 1=1';
+$perPage = 10;
+$currentPage = max(1, (int) ($_GET['p'] ?? 1));
+
+$baseSql = ' FROM trips t JOIN tfd_processes p ON p.id = t.process_id JOIN patients pa ON pa.id = p.patient_id WHERE 1=1';
 $params = [];
 if ($status !== '') {
-    $sql .= ' AND t.execution_status = :status';
+    $baseSql .= ' AND t.execution_status = :status';
     $params['status'] = $status;
 }
-$sql .= ' ORDER BY t.id DESC';
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
+
+$countStmt = $pdo->prepare('SELECT COUNT(*)' . $baseSql);
+$countStmt->execute($params);
+$totalItems = (int) $countStmt->fetchColumn();
+$totalPages = max(1, (int) ceil($totalItems / $perPage));
+$currentPage = min($currentPage, $totalPages);
+$offset = ($currentPage - 1) * $perPage;
+
+$stmt = $pdo->prepare('SELECT t.*, p.process_number, pa.name AS patient_name' . $baseSql . ' ORDER BY t.id DESC LIMIT :limit OFFSET :offset');
+foreach ($params as $key => $value) {
+    $stmt->bindValue(':' . $key, $value);
+}
+$stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+$stmt->execute();
 $rows = $stmt->fetchAll();
+
+$paginationQuery = [];
+if ($status !== '') {
+    $paginationQuery['status'] = $status;
+}
 ?>
 <section>
     <div class="section-head">
@@ -72,4 +92,5 @@ $rows = $stmt->fetchAll();
             </tbody>
         </table>
     </div>
+    <?= render_pagination('trips', $currentPage, $totalPages, $paginationQuery) ?>
 </section>

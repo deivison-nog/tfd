@@ -200,21 +200,43 @@ if (is_post()) {
 $patients = $pdo->query('SELECT id, name FROM patients ORDER BY name')->fetchAll();
 $processes = $pdo->query('SELECT id, process_number FROM tfd_processes ORDER BY id DESC')->fetchAll();
 $companions = $pdo->query('SELECT id, name FROM companions ORDER BY name')->fetchAll();
+$perPage = 10;
+$currentPage = max(1, (int) ($_GET['p'] ?? 1));
 
-$sql = 'SELECT * FROM documents WHERE 1=1';
+$baseSql = ' FROM documents WHERE 1=1';
 $params = [];
 if ($entityType !== '') {
-    $sql .= ' AND entity_type = :entity_type';
+    $baseSql .= ' AND entity_type = :entity_type';
     $params['entity_type'] = $entityType;
 }
 if ($entityId > 0) {
-    $sql .= ' AND entity_id = :entity_id';
+    $baseSql .= ' AND entity_id = :entity_id';
     $params['entity_id'] = $entityId;
 }
-$sql .= ' ORDER BY id DESC';
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
+
+$countStmt = $pdo->prepare('SELECT COUNT(*)' . $baseSql);
+$countStmt->execute($params);
+$totalItems = (int) $countStmt->fetchColumn();
+$totalPages = max(1, (int) ceil($totalItems / $perPage));
+$currentPage = min($currentPage, $totalPages);
+$offset = ($currentPage - 1) * $perPage;
+
+$stmt = $pdo->prepare('SELECT *' . $baseSql . ' ORDER BY id DESC LIMIT :limit OFFSET :offset');
+foreach ($params as $key => $value) {
+    $stmt->bindValue(':' . $key, $value);
+}
+$stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+$stmt->execute();
 $documents = $stmt->fetchAll();
+
+$paginationQuery = [];
+if ($entityType !== '') {
+    $paginationQuery['entity_type'] = $entityType;
+}
+if ($entityId > 0) {
+    $paginationQuery['entity_id'] = $entityId;
+}
 ?>
 <section>
     <div class="section-head"><h2>Documentos (opcionais)</h2></div>
@@ -295,6 +317,7 @@ $documents = $stmt->fetchAll();
             </tbody>
         </table>
     </div>
+    <?= render_pagination('documents', $currentPage, $totalPages, $paginationQuery) ?>
 
     <div class="panel">
         <h3>Referência rápida de IDs</h3>

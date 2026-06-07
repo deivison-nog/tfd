@@ -23,10 +23,6 @@ $menuItems = current_menu_items();
                 <?php endforeach; ?>
                 <a href="index.php?page=logout">Sair</a>
             </nav>
-            <small>
-                Logado como <?= e($user['username']) ?>
-                (<?= e(get_role_label((string) $user['role'])) ?>)
-            </small>
         </aside>
     <?php endif; ?>
     <main class="main-content<?= $user ? '' : ' is-public' ?>">

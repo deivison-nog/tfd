@@ -12,8 +12,20 @@ if (is_post()) {
     }
 }
 
-$sql = 'SELECT c.*, p.process_number FROM companions c JOIN tfd_processes p ON p.id = c.process_id ORDER BY c.id DESC';
-$rows = $pdo->query($sql)->fetchAll();
+$perPage = 10;
+$currentPage = max(1, (int) ($_GET['p'] ?? 1));
+
+$countStmt = $pdo->query('SELECT COUNT(*) FROM companions c JOIN tfd_processes p ON p.id = c.process_id');
+$totalItems = (int) $countStmt->fetchColumn();
+$totalPages = max(1, (int) ceil($totalItems / $perPage));
+$currentPage = min($currentPage, $totalPages);
+$offset = ($currentPage - 1) * $perPage;
+
+$stmt = $pdo->prepare('SELECT c.*, p.process_number FROM companions c JOIN tfd_processes p ON p.id = c.process_id ORDER BY c.id DESC LIMIT :limit OFFSET :offset');
+$stmt->bindValue(':limit', $perPage, PDO::PARAM_INT);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+$stmt->execute();
+$rows = $stmt->fetchAll();
 ?>
 <section>
     <div class="section-head">
@@ -47,4 +59,5 @@ $rows = $pdo->query($sql)->fetchAll();
             </tbody>
         </table>
     </div>
+    <?= render_pagination('companions', $currentPage, $totalPages) ?>
 </section>
