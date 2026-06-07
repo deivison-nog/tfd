@@ -28,7 +28,7 @@ if (is_post()) {
         $stmt = $pdo->prepare('UPDATE trips SET execution_status = :execution_status, updated_at = :updated_at WHERE id = :id');
         $stmt->execute([
             'execution_status' => $executionStatus,
-            'updated_at' => date('c'),
+            'updated_at' => date('Y-m-d H:i:s'),
             'id' => $id,
         ]);
         flash('success', 'Status da viagem atualizado.');
