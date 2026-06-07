@@ -25,3 +25,11 @@ const TFD_PRIORITIES = [
     'alta',
     'urgente',
 ];
+
+const TRIP_EXECUTION_STATUSES = [
+    'agendado' => 'Agendado',
+    'em viagem' => 'Em viagem',
+    'retornado' => 'Retornado',
+    'concluído' => 'Concluído',
+    'cancelado' => 'Cancelado',
+];

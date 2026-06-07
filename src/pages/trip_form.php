@@ -103,11 +103,9 @@ if (is_post()) {
         </label>
         <label>Status de execução
             <select name="execution_status">
-                <option value="agendado" <?= $trip['execution_status'] === 'agendado' ? 'selected' : '' ?>>Agendado</option>
-                <option value="em viagem" <?= $trip['execution_status'] === 'em viagem' ? 'selected' : '' ?>>Em viagem</option>
-                <option value="retornado" <?= $trip['execution_status'] === 'retornado' ? 'selected' : '' ?>>Retornado</option>
-                <option value="concluído" <?= $trip['execution_status'] === 'concluído' ? 'selected' : '' ?>>Concluído</option>
-                <option value="cancelado" <?= $trip['execution_status'] === 'cancelado' ? 'selected' : '' ?>>Cancelado</option>
+                <?php foreach (TRIP_EXECUTION_STATUSES as $statusValue => $statusLabel): ?>
+                    <option value="<?= e($statusValue) ?>" <?= $trip['execution_status'] === $statusValue ? 'selected' : '' ?>><?= e($statusLabel) ?></option>
+                <?php endforeach; ?>
             </select>
         </label>
         <label class="full">Observações

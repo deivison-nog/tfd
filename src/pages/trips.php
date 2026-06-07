@@ -1,12 +1,6 @@
 <?php
 $pdo = db();
-$tripStatuses = [
-    'agendado' => 'Agendado',
-    'em viagem' => 'Em viagem',
-    'retornado' => 'Retornado',
-    'concluído' => 'Concluído',
-    'cancelado' => 'Cancelado',
-];
+$tripStatuses = TRIP_EXECUTION_STATUSES;
 
 if (is_post()) {
     verify_csrf();
