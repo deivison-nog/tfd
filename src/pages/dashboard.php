@@ -8,6 +8,19 @@ $totals = [
 ];
 
 $statusRows = $pdo->query('SELECT status, COUNT(*) total FROM tfd_processes GROUP BY status ORDER BY total DESC')->fetchAll();
+$tripsInProgress = (int) $pdo->query(
+    "SELECT COUNT(*) FROM trips
+    WHERE departure_date IS NOT NULL
+      AND return_date IS NOT NULL
+      AND datetime(departure_date || ' ' || COALESCE(NULLIF(departure_time, ''), '00:00')) <= datetime('now', 'localtime')
+      AND datetime(return_date || ' ' || COALESCE(NULLIF(return_time, ''), '23:59')) >= datetime('now', 'localtime')"
+)->fetchColumn();
+$tripsStatusPendingUpdate = (int) $pdo->query(
+    "SELECT COUNT(*) FROM trips
+    WHERE return_date IS NOT NULL
+      AND datetime(return_date || ' ' || COALESCE(NULLIF(return_time, ''), '23:59')) < datetime('now', 'localtime')
+      AND lower(trim(execution_status)) NOT IN ('concluído', 'concluido', 'cancelado')"
+)->fetchColumn();
 
 $quickAccess = [
     'patients'   => ['label' => 'Pacientes',       'url' => 'index.php?page=patients',   'emoji' => '🏥'],
@@ -34,6 +47,8 @@ $welcomeName = trim((string) ($currentUser['name'] ?? $currentUser['username'] ?
         <article class="card"><h3>📋 <?= $totals['processes'] ?></h3><p>Processos TFD</p></article>
         <article class="card"><h3>👥 <?= $totals['companions'] ?></h3><p>Acompanhantes</p></article>
         <article class="card"><h3>🚐 <?= $totals['trips'] ?></h3><p>Viagens</p></article>
+        <article class="card"><h3>🟢 <?= $tripsInProgress ?></h3><p>Em viagem</p></article>
+        <article class="card"><h3>⚠️ <?= $tripsStatusPendingUpdate ?></h3><p>Status para atualizar</p></article>
     </div>
 
     <div class="panel">
